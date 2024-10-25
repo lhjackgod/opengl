@@ -1,0 +1,3 @@
+﻿  main.cpp
+D:\learnOpengl\LearnOpenGL\Transform\Transform\src\main.cpp(31,26): warning C4101: “textureID2”: 未引用的局部变量
+  Transform.vcxproj -> D:\learnOpengl\LearnOpenGL\Transform\bin\Debug-windows-x86_64\Transform\Transform.exe
