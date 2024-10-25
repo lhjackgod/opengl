@@ -7,6 +7,46 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "Camera.h"
+using namespace CameraSpace;
+Camera camera;
+bool firstMouse = true;
+float lastMouseX, lastMouseY;
+void processInput(GLFWwindow* window, float deltaTime) {
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE)) {
+		glfwSetWindowShouldClose(window, true);
+	}
+	if (glfwGetKey(window, GLFW_KEY_W)) {
+		camera.ProcessKeyboard(CameraMovement::FOWRAD, deltaTime);
+	}
+	if (glfwGetKey(window, GLFW_KEY_S)) {
+		camera.ProcessKeyboard(CameraMovement::BACKWARD, deltaTime);
+	}
+	if (glfwGetKey(window, GLFW_KEY_A)) {
+		camera.ProcessKeyboard(CameraMovement::LEFT, deltaTime);
+	}
+	if (glfwGetKey(window, GLFW_KEY_D)) {
+		camera.ProcessKeyboard(CameraMovement::RIGHT, deltaTime);
+	}
+}
+void Mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
+	float xpos = static_cast<float>(xposIn);
+	float ypos = static_cast<float>(yposIn);
+	if (firstMouse) {
+		lastMouseX = xpos;
+		lastMouseY = ypos;
+		firstMouse = false;
+	}
+	float xoffset = xpos - lastMouseX;
+	float yoffset = lastMouseY - ypos;
+	
+	lastMouseX = xpos;
+	lastMouseY = ypos;
+	camera.ProcessMouseMovement(xoffset, yoffset);
+}
+void MouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+	camera.ProcessMouseScrollback(static_cast<float>(yoffset));
+}
 int main() {
 	int WINDOW_WIDTH = 800;
 	int WINDOW_HEIGHT = 600;
@@ -23,6 +63,8 @@ int main() {
 	glViewport(0, 0, 800, 600);
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
+	glfwSetCursorPosCallback(window, Mouse_callback);
+	glfwSetScrollCallback(window, MouseScrollCallback);
 	glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window,int width, int height) {glViewport(0, 0, width, height); });
 	Shader shader("shader/vertex.glsl", "shader/fragment.glsl");
 	shader.use();
@@ -100,22 +142,46 @@ int main() {
 	glEnableVertexAttribArray(1);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 	float initime = glfwGetTime();
-	glm::mat4 view(1.0f);
 	glm::mat4 proj(1.0f);
-	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 	proj = glm::perspective(glm::radians(45.0f), static_cast<float>(WINDOW_WIDTH / WINDOW_HEIGHT), 0.1f, 100.0f);
+	glm::vec3 position[] = {
+		  glm::vec3(0.0f,  0.0f,  0.0f),
+		  glm::vec3(2.0f,  5.0f, -15.0f),
+		  glm::vec3(-1.5f, -2.2f, -2.5f),
+		  glm::vec3(-3.8f, -2.0f, -12.3f),
+		  glm::vec3(2.4f, -0.4f, -3.5f),
+		  glm::vec3(-1.7f,  3.0f, -7.5f),
+		  glm::vec3(1.3f, -2.0f, -2.5f),
+		  glm::vec3(1.5f,  2.0f, -2.5f),
+		  glm::vec3(1.5f,  0.2f, -1.5f),
+		  glm::vec3(-1.3f,  1.0f, -1.5f)
+	};
+	
+	float last_time = static_cast<float>(glfwGetTime());
+	float deltaTime = 0.0f;
 	while (!glfwWindowShouldClose(window)) {
+		float nowTime = static_cast<float>(glfwGetTime());
+		deltaTime = nowTime - last_time;
+		last_time = nowTime;
+		processInput(window,deltaTime);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		shader.use();
-		glm::mat4 trans(1.0f);
-		glm::mat4 model(1.0f);
-		model = glm::rotate(model, static_cast<float>((glfwGetTime() - initime) * glm::radians(50.0f)), glm::vec3(0.5f, 1.0f, 0.0f));
-		trans = proj * view * model;
-		glUniformMatrix4fv(glGetUniformLocation(shader.ShaderProgramID, "transform"), 1, GL_FALSE, glm::value_ptr(trans));
+		
+		glm::mat4 view = camera.GetViewMatrix();
+		proj = glm::perspective(glm::radians(camera.fov), static_cast<float>(WINDOW_WIDTH / WINDOW_HEIGHT), 0.01f, 100.0f);
+		glUniformMatrix4fv(glGetUniformLocation(shader.ShaderProgramID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(shader.ShaderProgramID, "perspect"), 1, GL_FALSE, glm::value_ptr(proj));
+		
 		glBindVertexArray(VAO);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textureID);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		for (int i = 0; i < 10; i++) {
+			glm::mat4 model(1.0);
+			model = glm::translate(model, position[i]);
+			model = glm::rotate(model, glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
+			glUniformMatrix4fv(glGetUniformLocation(shader.ShaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

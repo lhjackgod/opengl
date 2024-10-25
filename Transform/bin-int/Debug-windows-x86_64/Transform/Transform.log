@@ -1,4 +1,4 @@
 ﻿  main.cpp
-D:\learnOpengl\LearnOpenGL\Transform\Transform\src\main.cpp(102,16): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
-D:\learnOpengl\LearnOpenGL\Transform\Transform\src\main.cpp(32,26): warning C4101: “textureID2”: 未引用的局部变量
+D:\learnOpengl\LearnOpenGL\Transform\Transform\src\main.cpp(144,16): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
+D:\learnOpengl\LearnOpenGL\Transform\Transform\src\main.cpp(74,26): warning C4101: “textureID2”: 未引用的局部变量
   Transform.vcxproj -> D:\learnOpengl\LearnOpenGL\Transform\bin\Debug-windows-x86_64\Transform\Transform.exe
