@@ -137,6 +137,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shader\fragment.glsl" />
+    <None Include="src\shader\renderCube.glsl" />
+    <None Include="src\shader\renderCubefrag.glsl" />
     <None Include="src\shader\vershader.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

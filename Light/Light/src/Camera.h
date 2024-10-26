@@ -20,6 +20,7 @@ public:
 	void ProcessMouseCallback(float xoffset, float yoffset, GLboolean constrainPitch = true);
 	void ProcessScrollCallback(float yoffset);
 	float getFov();
+	glm::vec3 getCameraPos();
 	glm::mat4 getViewMatrix();
 private:
 	float fov = 45.0f;

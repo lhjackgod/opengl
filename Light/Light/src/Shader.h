@@ -47,7 +47,9 @@ public:
 	unsigned int getShaderProgram() { return ShaderProragmID; }
 	void use() { glUseProgram(ShaderProragmID); }
 	void setVec3(const char* name, float a, float b, float c);
+	void setVec3(const char* name, glm::vec3 a);
 	void setMatrix4(const char* name, glm::mat4 matrix);
+	void setInt(const char* name, int a);
 private:
 	unsigned int ShaderProragmID;
 };
