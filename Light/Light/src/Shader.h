@@ -50,6 +50,7 @@ public:
 	void setVec3(const char* name, glm::vec3 a);
 	void setMatrix4(const char* name, glm::mat4 matrix);
 	void setInt(const char* name, int a);
+	void setFloat(const char* name, float a);
 private:
 	unsigned int ShaderProragmID;
 };

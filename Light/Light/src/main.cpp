@@ -141,10 +141,19 @@ int main() {
 		lightingShader.setMatrix4("view", view);
 		lightingShader.setMatrix4("perspective", proj);
 		lightingShader.setMatrix4("model", model);
-		lightingShader.setVec3("lightPos", lightPos);
+		lightingShader.setVec3("light.position", lightPos);
 		lightingShader.setVec3("cameraPos", camera.getCameraPos());
-		lightingShader.setVec3("ambient", glm::vec3(0.3f));
-		lightingShader.setInt("k", 32);
+		lightingShader.setFloat("phonMaterial.k", 32.0);
+		lightingShader.setVec3("phonMaterial.diffuseMaterial", glm::vec3(1.0f, 0.5f, 0.31f));
+		lightingShader.setVec3("phonMaterial.specularMaterial", glm::vec3(0.5f, 0.5f, 0.5f));
+		lightingShader.setVec3("phonMaterial.ambientMaterial", glm::vec3(1.0f, 0.5f, 0.31f));
+		glm::vec3 lightColor;
+		lightColor.x = sin(glfwGetTime() * 2.0f) * 0.5f +0.5f;
+		lightColor.y = sin(glfwGetTime() * 0.7f) * 0.5f + 0.5f;
+		lightColor.z = sin(glfwGetTime() * 1.3f) * 0.5f + 0.5f;
+		lightingShader.setVec3("light.ambient", lightColor * 0.2f);
+		lightingShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		lightingShader.setVec3("light.diffuse", lightColor * 0.5f);
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		

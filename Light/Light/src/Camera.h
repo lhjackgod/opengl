@@ -32,7 +32,7 @@ private:
 	float yaw;
 	float patch;
 	float CameraMovementSpeed = 2.5f;
-	float MouseSensitive = 0.001f;
+	float MouseSensitive = 0.005f;
 private:
 	void updateInfo();
 };

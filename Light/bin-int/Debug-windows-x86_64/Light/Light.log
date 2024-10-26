@@ -1,2 +1,17 @@
 ﻿  main.cpp
+D:\learnOpengl\LearnOpenGL\Light\Light\src\main.cpp(151,51): warning C4244: “=”: 从“double”转换到“T”，可能丢失数据
+          with
+          [
+              T=float
+          ]
+D:\learnOpengl\LearnOpenGL\Light\Light\src\main.cpp(152,51): warning C4244: “=”: 从“double”转换到“T”，可能丢失数据
+          with
+          [
+              T=float
+          ]
+D:\learnOpengl\LearnOpenGL\Light\Light\src\main.cpp(153,51): warning C4244: “=”: 从“double”转换到“T”，可能丢失数据
+          with
+          [
+              T=float
+          ]
   Light.vcxproj -> D:\learnOpengl\LearnOpenGL\Light\bin\Debug-windows-x86_64\Light\Light.exe
