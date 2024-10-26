@@ -31,8 +31,10 @@ public:
 		glCompileShader(verShaderID);
 		glCompileShader(fragmentShaderID);
 		int success;
-		glGetShaderiv(verShaderID, GL_COMPILE_STATUS, &success);
-		
+		glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &success);
+		if (!success) {
+			std::cout << "frag" << std::endl;
+		}
 		ShaderProragmID = glCreateProgram();
 		glAttachShader(ShaderProragmID, verShaderID);
 		glAttachShader(ShaderProragmID, fragmentShaderID);
