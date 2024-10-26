@@ -22,6 +22,7 @@ public:
 	float getFov();
 	glm::vec3 getCameraPos();
 	glm::mat4 getViewMatrix();
+	glm::vec3 getFront();
 private:
 	float fov = 45.0f;
 	glm::vec3 position;

@@ -168,6 +168,18 @@ int main() {
 	modellight = glm::scale(modellight, glm::vec3(0.2f));
 	unsigned int texture1 = setMaterial("../Texture/container2.png");
 	unsigned int texture2 = setMaterial("../Texture/container2_specular.png");
+	glm::vec3 cubePositions[] = {
+	glm::vec3(0.0f,  0.0f,  0.0f),
+	glm::vec3(2.0f,  5.0f, -15.0f),
+	glm::vec3(-1.5f, -2.2f, -2.5f),
+	glm::vec3(-3.8f, -2.0f, -12.3f),
+	glm::vec3(2.4f, -0.4f, -3.5f),
+	glm::vec3(-1.7f,  3.0f, -7.5f),
+	glm::vec3(1.3f, -2.0f, -2.5f),
+	glm::vec3(1.5f,  2.0f, -2.5f),
+	glm::vec3(1.5f,  0.2f, -1.5f),
+	glm::vec3(-1.3f,  1.0f, -1.5f)
+	};
 	while (!glfwWindowShouldClose(window)) {
 		float nowTime = static_cast<float>(glfwGetTime());
 		float deltaTime = nowTime - lastTime;
@@ -179,25 +191,33 @@ int main() {
 		view = camera.getViewMatrix();
 		lightingShader.setMatrix4("view", view);
 		lightingShader.setMatrix4("perspective", proj);
-		lightingShader.setMatrix4("model", model);
 		lightingShader.setVec3("light.position", lightPos);
 		lightingShader.setVec3("cameraPos", camera.getCameraPos());
 		lightingShader.setFloat("phonMaterial.k", 64.0f);
-
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture1);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture2);
 		lightingShader.setVec3("phonMaterial.ambientMaterial", glm::vec3(1.0f, 0.5f, 0.31f));
-		glm::vec3 lightColor(1.0f);
-		
 		lightingShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
 		lightingShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 		lightingShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
-		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		
-		
+		lightingShader.setVec3("light.position", camera.getCameraPos());
+		lightingShader.setFloat("light.constant", 1.0f);
+		lightingShader.setFloat("light.linear", 0.09f);
+		lightingShader.setFloat("light.quadratic", 0.032f);
+		lightingShader.setVec3("light.direction", camera.getFront());
+		lightingShader.setFloat("light.cutoff", glm::cos(glm::radians(12.5f)));
+		lightingShader.setFloat("light.outcutoff", glm::cos(glm::radians(17.5f)));
+		for (int i = 0; i < 10; i++) {
+			model = glm::mat4(1.0);
+			model = glm::translate(model, cubePositions[i]);
+			float angle = i * 20.0f;
+			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+			lightingShader.setMatrix4("model", model);
+			glBindVertexArray(VAO);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
 		
 		lightcube.use();
 		lightcube.setMatrix4("view", view);

@@ -54,6 +54,11 @@ glm::mat4 Camera::getViewMatrix()
 	return glm::lookAt(position, front + position, up);
 }
 
+glm::vec3 Camera::getFront()
+{
+	return front;
+}
+
 void Camera::updateInfo()
 {
 	glm::vec3 Front;
