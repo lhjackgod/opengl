@@ -1,0 +1,4 @@
+﻿  main.cpp
+D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(30,53): warning C4244: “参数”: 从“float”转换到“int”，可能丢失数据
+D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(30,40): warning C4244: “参数”: 从“float”转换到“int”，可能丢失数据
+  DeeperOpenGL.vcxproj -> D:\learnOpengl\LearnOpenGL\DeeperOpenGL\bin\Debug-windows-x86_64\DeeperOpenGL\DeeperOpenGL.exe

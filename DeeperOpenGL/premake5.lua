@@ -11,10 +11,12 @@ IncludeDir["GLFW"] = "D:/openglEnv/GLFW/glfw/include"
 IncludeDir["GLAD"] = "D:/openglEnv/GLAD/include"
 IncludeDir["GLM"] = "D:/openglEnv/glm-1.0.1"
 include "D:/openglEnv/GLAD"
-project "DeeperOpenGLm"
+project "DeeperOpenGL"
     location "DeeperOpenGL"
     kind "ConsoleApp"
     language "C++"
+    cppdialect "C++17"
+    staticruntime "off"
     targetdir ("bin/" ..outputdir.. "/%{prj.name}")
     objdir ("bin-int/" ..outputdir.. "/%{prj.name}")
     files{
@@ -32,14 +34,16 @@ project "DeeperOpenGLm"
         "D:/openglEnv/GLFW/glfw/build/src/Debug/glfw3.lib",
         "Glad"
     }
+    defines{
+        "GLFW_INCLUDE_NONE"
+    }
     filter "system:windows"
         cppdialect "C++17"
-        staticruntime "On"
+        staticruntime "off"
         systemversion "latest"
-        buildoptions "/MDd"
     filter "configurations:Debug"
-        symbols "On"
+        symbols "on"
     filter "configurations:Release"
-        optimize "On"
+        optimize "on"
     filter "configurations:Dist"
-        optimize "On"
+        optimize "on"
