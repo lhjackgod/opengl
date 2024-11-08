@@ -1,0 +1,8 @@
+﻿  Model.cpp
+D:\learnOpengl\LearnOpenGL\Model\Model\src\Model.cpp(29,20): warning C4018: “<”: 有符号/无符号不匹配
+D:\learnOpengl\LearnOpenGL\Model\Model\src\Model.cpp(32,20): warning C4018: “<”: 有符号/无符号不匹配
+D:\learnOpengl\LearnOpenGL\Model\Model\src\Model.cpp(42,20): warning C4018: “<”: 有符号/无符号不匹配
+D:\learnOpengl\LearnOpenGL\Model\Model\src\Model.cpp(64,20): warning C4018: “<”: 有符号/无符号不匹配
+D:\learnOpengl\LearnOpenGL\Model\Model\src\Model.cpp(124,33): warning C4553: “==”: 未使用表达式结果；是否打算使用“=”?
+D:\learnOpengl\LearnOpenGL\Model\Model\src\Model.cpp(125,33): warning C4553: “==”: 未使用表达式结果；是否打算使用“=”?
+  Model.vcxproj -> D:\learnOpengl\LearnOpenGL\Model\bin\Debug-windows-x86_64\Model\Model.exe

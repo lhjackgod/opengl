@@ -2,6 +2,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
+#include <map>
 #include <fstream>
 #include <sstream>
 #include "Camera.h"
@@ -91,22 +92,43 @@ int main() {
 		-5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
 		 5.0f, -0.5f, -5.0f,  2.0f, 2.0f
 	};
+	float transparentVertices[] = {
+		// positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
+		0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+		0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
+		1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+
+		0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+		1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+		1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+	};
 	OpenGLVertexArray cubeVertexArray(cubeVertices,sizeof(cubeVertices));
 	OpenGLVertexArray planeVertexArray(planeVertices,sizeof(planeVertices));
+	OpenGLVertexArray transparentVetexArray(transparentVertices, sizeof(transparentVertices));
 
 	Texture cubeTexture("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/texture/marble.jpg");
 	Texture planeTexture("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/texture/metal.png");
+	Texture grassTexture("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/texture/grass.png");
+	Texture glassTexture("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/texture/glass.png");
 	Shader m_TextureShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/depth_test.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/depth_test.fs");
 	m_TextureShader.use();
 	m_TextureShader.setInt("u_Texture", 0);
 	float lastTime = static_cast<float>(glfwGetTime());
-	glEnable(GL_STENCIL_TEST);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+	
+
+	//glass
+	std::vector<glm::vec3> vegetation;
+	vegetation.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
+	vegetation.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
+	vegetation.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
+	vegetation.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
+	vegetation.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
 	while (!glfwWindowShouldClose(window)) {
 		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		glStencilMask(0xFF);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		float currentFram = static_cast<float> (glfwGetTime());
 		float delteTime = currentFram - lastTime;
@@ -120,16 +142,14 @@ int main() {
 		
 
 		//plane
-		glStencilFunc(GL_ALWAYS, 0, 0xFF);
-		glStencilMask(0xFF);
+		
 		Render::BeginScene(m_TextureShader, planeVertexArray);
 		m_TextureShader.setMat4("model", glm::mat4(1.0f));
 		planeTexture.Bind();
 		Render::RenderScene(6);
 
 		//cube
-		glStencilFunc(GL_ALWAYS, 1, 0xFF);
-		glStencilMask(0xFF);
+		
 		Render::BeginScene(m_TextureShader, cubeVertexArray);
 		glm::mat4 model1 = glm::mat4(1.0f);
 		model1 = glm::translate(model1, glm::vec3(-1.0f, 0.0f, -1.0f));
@@ -142,19 +162,21 @@ int main() {
 		m_TextureShader.setMat4("model", model2);
 		Render::RenderScene(36);
 
-		//borader
-		model1 = glm::scale(model1, glm::vec3(1.1f));
-		m_TextureShader.setMat4("model", model1);
-		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-		glStencilMask(0x00);
-		glDisable(GL_DEPTH_TEST);
-		m_TextureShader.setVec4("u_Color", glm::vec4(1.0f));
-		Render::RenderScene(36);
-
-		model2 = glm::scale(model2, glm::vec3(1.1f));
-		m_TextureShader.setMat4("model", model2);
-		Render::RenderScene(36);
-
+		//glass
+		std::map<float, glm::vec3> sorted;
+		for (int i = 0; i < vegetation.size(); i++) {
+			float distance = glm::length(camera.GetPosition() - vegetation[i]);
+			sorted[distance] = vegetation[i];
+		}
+		Render::BeginScene(m_TextureShader, transparentVetexArray);
+		for (auto& it = sorted.rbegin(); it != sorted.rend(); it++) {
+			glm::mat4 modelglass(1.0f);
+			modelglass = glm::translate(modelglass, it->second);
+			glassTexture.Bind();
+			m_TextureShader.setMat4("model", modelglass);
+			Render::RenderScene(6);
+		}
+		
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}

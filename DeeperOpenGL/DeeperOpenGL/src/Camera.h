@@ -18,6 +18,7 @@ public:
 	void ZoomImpl(const float& yoffset);
 	glm::mat4 getViewMatrix();
 	glm::mat4 getViewPerspective(const float& width, const float& height);
+	glm::vec3 GetPosition();
 private:
 	void reCalculate();
 	glm::mat4 m_ViewMatrix;

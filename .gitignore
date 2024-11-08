@@ -1,0 +1,7 @@
+#dictionaries
+.bin/
+.bin-int/
+.vs/
+.vender/
+#files
+*.user

@@ -9,7 +9,9 @@ void main(){
         FragColor = u_Color;
     }
     else{
-        FragColor = texture(u_Texture, v_TexCoord);
+        vec4 texColor = texture(u_Texture, v_TexCoord);
+        
+        FragColor = texColor;
     }
     
 }

@@ -57,6 +57,11 @@ glm::mat4 Camera::getViewPerspective(const float& width, const float& height)
 		glm::lookAt(m_Position, m_Front + m_Position, m_Up);
 }
 
+glm::vec3 Camera::GetPosition()
+{
+	return m_Position;
+}
+
 void Camera::reCalculate()
 {
 	glm::vec3 front;
