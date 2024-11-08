@@ -61,6 +61,7 @@ public:
 	}
 	void setInt(const std::string& name, int value);
 	void setMat4(const std::string& name, glm::mat4 value);
+	void setVec4(const std::string& name, glm::vec4 value);
 	inline void use() { glUseProgram(m_RendererID); }
 private:
 	uint32_t m_RendererID;
