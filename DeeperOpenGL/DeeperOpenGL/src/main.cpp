@@ -14,7 +14,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #define WINDOWWIDTH 800.0f
 #define WINDOWHEIGHT 600.0f
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(0.0f, 0.0f, 0.0f));
 float lastX = (float)WINDOWWIDTH / 2.0f;
 float lastY = (float)WINDOWHEIGHT / 2.0f;
 bool firtstMouse = true;
@@ -147,6 +147,22 @@ int main() {
 		glm::mat4 perView = camera.getViewPerspective(static_cast<float>(WINDOWWIDTH), static_cast<float>(WINDOWHEIGHT));
 		m_TextureShader.setMat4("projection", perView);
 
+		glDepthMask(GL_FALSE);
+		//sky cube
+		glm::mat4  model2 = glm::mat4(1.0f);
+		//model2 = glm::translate(model2, glm::vec3(2.0f, 0.0f, 0.0f));
+		Render::BeginScene(m_skyShader, cubeVertexArray);
+		glm::mat4 view = camera.getViewMatrix();
+		view = glm::mat4(glm::mat3(view));
+		glm::mat4 perspective = camera.getPerspective(WINDOWWIDTH, WINDOWHEIGHT);
+		m_skyShader.setMat4("view", view);
+		m_skyShader.setMat4("perspective", perspective);
+		m_skyShader.setMat4("viewPerspective", perView);
+		m_TextureShader.setMat4("model", model2);
+		sky.Bind();
+		Render::RenderScene(36);
+
+		glDepthMask(GL_TRUE);
 		//plane
 		
 		Render::BeginScene(m_TextureShader, planeVertexArray);
@@ -163,13 +179,8 @@ int main() {
 		boxTexture.Bind();
 		Render::RenderScene(36);
 
-		glm::mat4  model2 = glm::mat4(1.0f);
-		model2 = glm::translate(model2, glm::vec3(2.0f, 0.0f, 0.0f));
-		Render::BeginScene(m_skyShader, cubeVertexArray);
-		m_skyShader.setMat4("viewPerspective", perView);
-		m_TextureShader.setMat4("model", model2);
-		sky.Bind();
-		Render::RenderScene(36);
+		
+		
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
