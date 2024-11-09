@@ -1,5 +1,4 @@
 ﻿  main.cpp
 D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(31,53): warning C4244: “参数”: 从“float”转换到“int”，可能丢失数据
 D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(31,40): warning C4244: “参数”: 从“float”转换到“int”，可能丢失数据
-LINK : warning LNK4098: 默认库“LIBCMT”与其他库的使用冲突；请使用 /NODEFAULTLIB:library
   DeeperOpenGL.vcxproj -> D:\learnOpengl\LearnOpenGL\DeeperOpenGL\bin\Debug-windows-x86_64\DeeperOpenGL\DeeperOpenGL.exe

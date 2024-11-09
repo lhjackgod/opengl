@@ -7,5 +7,7 @@ uniform mat4 model;
 out vec3 vPos;
 void main(){
     vPos = aPos;
-    gl_Position = perspective * view * model * vec4(aPos, 1.0);
+    vec4 pos = perspective * view * model * vec4(aPos, 1.0);
+    
+    gl_Position = pos.xyww;
 }

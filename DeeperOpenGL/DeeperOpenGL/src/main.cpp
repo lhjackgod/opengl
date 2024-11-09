@@ -102,9 +102,54 @@ int main() {
 		1.0f, -0.5f,  0.0f,  1.0f,  0.0f,
 		1.0f,  0.5f,  0.0f,  1.0f,  1.0f
 	};
+	float skyboxVertices[] = {
+		// positions          
+		-1.0f,  1.0f, -1.0f, 0.0f, 0.0f,
+		-1.0f, -1.0f, -1.0f, 1.0f, 1.0f,
+		 1.0f, -1.0f, -1.0f, 1.0f, 0.0f,
+		 1.0f, -1.0f, -1.0f, 1.0f, 1.0f,
+		 1.0f,  1.0f, -1.0f, 0.0f, 0.0f,
+		-1.0f,  1.0f, -1.0f, 0.0f, 1.0f,
+							 
+		-1.0f, -1.0f,  1.0f, 0.0f, 0.0f,
+		-1.0f, -1.0f, -1.0f, 1.0f, 0.0f,
+		-1.0f,  1.0f, -1.0f, 1.0f, 1.0f,
+		-1.0f,  1.0f, -1.0f, 1.0f, 1.0f,
+		-1.0f,  1.0f,  1.0f, 0.0f, 1.0f,
+		-1.0f, -1.0f,  1.0f, 0.0f, 0.0f,
+							 
+		 1.0f, -1.0f, -1.0f, 1.0f, 0.0f,
+		 1.0f, -1.0f,  1.0f, 1.0f, 1.0f,
+		 1.0f,  1.0f,  1.0f, 0.0f, 1.0f,
+		 1.0f,  1.0f,  1.0f, 0.0f, 1.0f,
+		 1.0f,  1.0f, -1.0f, 0.0f, 0.0f,
+		 1.0f, -1.0f, -1.0f, 1.0f, 0.0f,
+							 
+		-1.0f, -1.0f,  1.0f, 1.0f, 0.0f,
+		-1.0f,  1.0f,  1.0f, 0.0f, 1.0f,
+		 1.0f,  1.0f,  1.0f, 1.0f, 1.0f,
+		 1.0f,  1.0f,  1.0f, 0.0f, 1.0f,
+		 1.0f, -1.0f,  1.0f, 1.0f, 0.0f,
+		-1.0f, -1.0f,  1.0f, 0.0f, 0.0f,
+							 
+		-1.0f,  1.0f, -1.0f, 0.0f, 1.0f,
+		 1.0f,  1.0f, -1.0f, 1.0f, 1.0f,
+		 1.0f,  1.0f,  1.0f, 1.0f, 0.0f,
+		 1.0f,  1.0f,  1.0f, 1.0f, 0.0f,
+		-1.0f,  1.0f,  1.0f, 0.0f, 0.0f,
+		-1.0f,  1.0f, -1.0f, 0.0f, 1.0f,
+							 
+		-1.0f, -1.0f, -1.0f, 0.0f, 1.0f,
+		-1.0f, -1.0f,  1.0f, 1.0f, 0.0f,
+		 1.0f, -1.0f, -1.0f, 1.0f, 1.0f,
+		 1.0f, -1.0f, -1.0f, 1.0f, 0.0f,
+		-1.0f, -1.0f,  1.0f, 0.0f, 1.0f,
+		 1.0f, -1.0f,  1.0f, 0.0f, 0.0f
+	};
 	OpenGLVertexArray cubeVertexArray(cubeVertices,sizeof(cubeVertices));
 	OpenGLVertexArray planeVertexArray(planeVertices,sizeof(planeVertices));
 	OpenGLVertexArray transparentVetexArray(transparentVertices, sizeof(transparentVertices));
+	OpenGLVertexArray skyVertexArray(skyboxVertices, sizeof(skyboxVertices));
 
 	Texture cubeTexture("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/texture/marble.jpg");
 	Texture planeTexture("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/texture/metal.png");
@@ -146,12 +191,11 @@ int main() {
 		m_TextureShader.setVec4("u_Color", glm::vec4(0.0f));
 		glm::mat4 perView = camera.getViewPerspective(static_cast<float>(WINDOWWIDTH), static_cast<float>(WINDOWHEIGHT));
 		m_TextureShader.setMat4("projection", perView);
-
-		glDepthMask(GL_FALSE);
 		//sky cube
+		glDepthFunc(GL_LEQUAL);
 		glm::mat4  model2 = glm::mat4(1.0f);
 		//model2 = glm::translate(model2, glm::vec3(2.0f, 0.0f, 0.0f));
-		Render::BeginScene(m_skyShader, cubeVertexArray);
+		Render::BeginScene(m_skyShader, skyVertexArray);
 		glm::mat4 view = camera.getViewMatrix();
 		view = glm::mat4(glm::mat3(view));
 		glm::mat4 perspective = camera.getPerspective(WINDOWWIDTH, WINDOWHEIGHT);
@@ -161,10 +205,8 @@ int main() {
 		m_TextureShader.setMat4("model", model2);
 		sky.Bind();
 		Render::RenderScene(36);
-
-		glDepthMask(GL_TRUE);
 		//plane
-		
+		glDepthFunc(GL_LESS);
 		Render::BeginScene(m_TextureShader, planeVertexArray);
 		m_TextureShader.setMat4("model", glm::mat4(1.0f));
 		planeTexture.Bind();
