@@ -6,7 +6,7 @@
 class OpenGLVertexArray
 {
 public:
-	OpenGLVertexArray(float* vertices, uint32_t size);
+	OpenGLVertexArray(float* vertices, uint32_t size, int type = 0);
 	void Bind();
 	uint32_t GetVertexArray();
 private:

@@ -146,11 +146,54 @@ int main() {
 		-1.0f, -1.0f,  1.0f, 0.0f, 1.0f,
 		 1.0f, -1.0f,  1.0f, 0.0f, 0.0f
 	};
-	OpenGLVertexArray cubeVertexArray(cubeVertices,sizeof(cubeVertices));
-	OpenGLVertexArray planeVertexArray(planeVertices,sizeof(planeVertices));
-	OpenGLVertexArray transparentVetexArray(transparentVertices, sizeof(transparentVertices));
-	OpenGLVertexArray skyVertexArray(skyboxVertices, sizeof(skyboxVertices));
+	float vertices[] = {
+	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 
+	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	 0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+
+	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+	 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+	 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+	 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+	 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+	 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+	 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+	 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+	 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+	 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+	 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+	 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+	 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+	};
+	OpenGLVertexArray cubeVertexArray(cubeVertices,sizeof(cubeVertices),1);
+	OpenGLVertexArray planeVertexArray(planeVertices,sizeof(planeVertices),1);
+	OpenGLVertexArray transparentVetexArray(transparentVertices, sizeof(transparentVertices),1);
+	OpenGLVertexArray skyVertexArray(skyboxVertices, sizeof(skyboxVertices),1);
+	OpenGLVertexArray useEnvirment(vertices, sizeof(vertices),2);
 	Texture cubeTexture("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/texture/marble.jpg");
 	Texture planeTexture("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/texture/metal.png");
 	Texture grassTexture("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/texture/grass.png");
@@ -187,10 +230,6 @@ int main() {
 		lastTime = currentFram;
 		KeycallBack(window, delteTime);
 
-		m_TextureShader.use();
-		m_TextureShader.setVec4("u_Color", glm::vec4(0.0f));
-		glm::mat4 perView = camera.getViewPerspective(static_cast<float>(WINDOWWIDTH), static_cast<float>(WINDOWHEIGHT));
-		m_TextureShader.setMat4("projection", perView);
 		//sky cube
 		glDepthFunc(GL_LEQUAL);
 		glm::mat4  model2 = glm::mat4(1.0f);
@@ -201,24 +240,26 @@ int main() {
 		glm::mat4 perspective = camera.getPerspective(WINDOWWIDTH, WINDOWHEIGHT);
 		m_skyShader.setMat4("view", view);
 		m_skyShader.setMat4("perspective", perspective);
-		m_skyShader.setMat4("viewPerspective", perView);
-		m_TextureShader.setMat4("model", model2);
+		m_skyShader.setMat4("model", model2);
 		sky.Bind();
 		Render::RenderScene(36);
+
 		//plane
-		glDepthFunc(GL_LESS);
-		Render::BeginScene(m_TextureShader, planeVertexArray);
+		/*Render::BeginScene(m_TextureShader, planeVertexArray);
 		m_TextureShader.setMat4("model", glm::mat4(1.0f));
 		planeTexture.Bind();
-		Render::RenderScene(6);
+		Render::RenderScene(6);*/
 
 		//cube
-		
-		Render::BeginScene(m_TextureShader, cubeVertexArray);
+		glDepthFunc(GL_LESS);
+		Render::BeginScene(m_TextureShader, useEnvirment);
 		glm::mat4 model1 = glm::mat4(1.0f);
 		model1 = glm::translate(model1, glm::vec3(-1.0f, 0.0f, -1.0f));
 		m_TextureShader.setMat4("model", model1);
-		boxTexture.Bind();
+		glm::mat4 perview = camera.getViewPerspective(WINDOWWIDTH, WINDOWHEIGHT);
+		m_TextureShader.setMat4("projection", perview);
+		m_TextureShader.setVec3("cameraPos", camera.GetPosition());
+		sky.Bind();
 		Render::RenderScene(36);
 
 		
