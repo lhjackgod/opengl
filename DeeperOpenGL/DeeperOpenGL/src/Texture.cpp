@@ -28,3 +28,37 @@ void Texture::Bind(uint32_t slot)
 	glActiveTexture(GL_TEXTURE0 + slot);
 	glBindTexture(GL_TEXTURE_2D, m_RendererID);
 }
+
+
+CubeTexture::CubeTexture(const std::vector<std::string>& tp)
+	:texturePath(tp)
+{
+	glGenTextures(1, &m_RendererID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_RendererID);
+	for (int i = 0; i < texturePath.size(); i++) {
+		int width, height, channels;
+		stbi_uc* data = stbi_load(texturePath[i].c_str(), &width, &height, &channels, 0);
+		GLenum dataFormat;
+		if (channels == 1)
+			dataFormat = GL_RED;
+		else if (channels == 3)
+			dataFormat = GL_RGB;
+		else if (channels == 4)
+			dataFormat = GL_RGBA;
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+			0, dataFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data
+		);
+		stbi_image_free(data);
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+}
+
+void CubeTexture::Bind(uint32_t slot)
+{
+	glActiveTexture(GL_TEXTURE0 + slot);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_RendererID);
+}
