@@ -8,7 +8,8 @@ void main(){
     
     vec3 I = normalize(v_Pos - cameraPos);
     vec3 R = reflect(I, normalize(v_Normal));
-
-    vec4 texColor = texture(u_Texture, R);
+    float ratio = 1.00 / 1.52;
+    vec3 Rr = refract(I, normalize(v_Normal), ratio);
+    vec4 texColor = texture(u_Texture, Rr);
     FragColor = texColor;
 }
