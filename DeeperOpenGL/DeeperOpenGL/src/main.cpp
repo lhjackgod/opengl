@@ -94,13 +94,13 @@ int main() {
 	};
 	float transparentVertices[] = {
 		// positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
-		0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
-		0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
-		1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+		0.0f,  0.5f,  0.0f,  0.0f,  1.0f,
+		0.0f, -0.5f,  0.0f,  0.0f,  0.0f,
+		1.0f, -0.5f,  0.0f,  1.0f,  0.0f,
 
-		0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
-		1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
-		1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+		0.0f,  0.5f,  0.0f,  0.0f,  1.0f,
+		1.0f, -0.5f,  0.0f,  1.0f,  0.0f,
+		1.0f,  0.5f,  0.0f,  1.0f,  1.0f
 	};
 	OpenGLVertexArray cubeVertexArray(cubeVertices,sizeof(cubeVertices));
 	OpenGLVertexArray planeVertexArray(planeVertices,sizeof(planeVertices));
@@ -110,7 +110,9 @@ int main() {
 	Texture planeTexture("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/texture/metal.png");
 	Texture grassTexture("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/texture/grass.png");
 	Texture glassTexture("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/texture/glass.png");
+	Texture boxTexture  ("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/texture/container.jpg");
 	Shader m_TextureShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/depth_test.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/depth_test.fs");
+	Shader m_boxShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/frambuffer.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/frambuffer.fs");
 	m_TextureShader.use();
 	m_TextureShader.setInt("u_Texture", 0);
 	float lastTime = static_cast<float>(glfwGetTime());
@@ -123,13 +125,30 @@ int main() {
 	vegetation.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
 	vegetation.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
 	vegetation.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
+	uint32_t framBuffer;
+	glGenFramebuffers(1, &framBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, framBuffer);
+
+	unsigned int textureColorBuffer;
+	glGenTextures(1, &textureColorBuffer);
+	glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WINDOWWIDTH, WINDOWHEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorBuffer, 0);
+
+	unsigned int rbo;
+	glGenRenderbuffers(1, &rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 800, 600);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
+		std::cout<<"fram"<<std::endl;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER,0);
 	while (!glfwWindowShouldClose(window)) {
+		glBindFramebuffer(GL_FRAMEBUFFER, framBuffer);
 		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK);
-		glFrontFace(GL_CW);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -142,7 +161,6 @@ int main() {
 		m_TextureShader.setVec4("u_Color", glm::vec4(0.0f));
 		glm::mat4 perView = camera.getViewPerspective(static_cast<float>(WINDOWWIDTH), static_cast<float>(WINDOWHEIGHT));
 		m_TextureShader.setMat4("projection", perView);
-		
 
 		//plane
 		
@@ -157,32 +175,62 @@ int main() {
 		glm::mat4 model1 = glm::mat4(1.0f);
 		model1 = glm::translate(model1, glm::vec3(-1.0f, 0.0f, -1.0f));
 		m_TextureShader.setMat4("model", model1);
-		cubeTexture.Bind();
+		boxTexture.Bind();
 		Render::RenderScene(36);
 
 		glm::mat4  model2 = glm::mat4(1.0f);
 		model2 = glm::translate(model2, glm::vec3(2.0f, 0.0f, 0.0f));
 		m_TextureShader.setMat4("model", model2);
 		Render::RenderScene(36);
-
-		//glass
-		std::map<float, glm::vec3> sorted;
-		for (int i = 0; i < vegetation.size(); i++) {
-			float distance = glm::length(camera.GetPosition() - vegetation[i]);
-			sorted[distance] = vegetation[i];
-		}
-		Render::BeginScene(m_TextureShader, transparentVetexArray);
-		for (auto& it = sorted.rbegin(); it != sorted.rend(); it++) {
-			glm::mat4 modelglass(1.0f);
-			modelglass = glm::translate(modelglass, it->second);
-			glassTexture.Bind();
-			m_TextureShader.setMat4("model", modelglass);
-			Render::RenderScene(6);
-		}
 		
+		
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glEnable(GL_DEPTH_TEST);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//plane
+
+		Render::BeginScene(m_TextureShader, planeVertexArray);
+		m_TextureShader.setMat4("model", glm::mat4(1.0f));
+		planeTexture.Bind();
+		Render::RenderScene(6);
+
+		//cube
+
+		Render::BeginScene(m_TextureShader, cubeVertexArray);
+		m_TextureShader.setMat4("model", model1);
+		boxTexture.Bind();
+		Render::RenderScene(36);
+
+		m_TextureShader.setMat4("model", model2);
+		Render::RenderScene(36);
+
+
+		//l
+		Render::BeginScene(m_TextureShader, transparentVetexArray);
+		m_TextureShader.setMat4("model", glm::mat4(1.0f));
+		glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
+		Render::RenderScene(6);
+		////glass
+		//std::map<float, glm::vec3> sorted;
+		//for (int i = 0; i < vegetation.size(); i++) {
+		//	float distance = glm::length(camera.GetPosition() - vegetation[i]);
+		//	sorted[distance] = vegetation[i];
+		//}
+		//Render::BeginScene(m_TextureShader, transparentVetexArray);
+		//for (auto& it = sorted.rbegin(); it != sorted.rend(); it++) {
+		//	glm::mat4 modelglass(1.0f);
+		//	modelglass = glm::translate(modelglass, it->second);
+		//	glassTexture.Bind();
+		//	m_TextureShader.setMat4("model", modelglass);
+		//	Render::RenderScene(6);
+		//}
+		
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
+	glfwTerminate();
 }
 
 void KeycallBack(GLFWwindow* window, float deltatime)

@@ -62,6 +62,12 @@ glm::vec3 Camera::GetPosition()
 	return m_Position;
 }
 
+void Camera::SetYaw(float offset)
+{
+	m_Yaw += offset;
+	reCalculate();
+}
+
 void Camera::reCalculate()
 {
 	glm::vec3 front;
