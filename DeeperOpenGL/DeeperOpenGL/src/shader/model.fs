@@ -97,4 +97,5 @@ void main()
 
     vec3 finalColor = calculateDiffuse(diffuseColor1, normal, cameraPos, objectPos) + calculateSpecular(specularColor1, normal, cameraPos, objectPos);
     FragColor = vec4(finalColor, 1.0);
+    
 }

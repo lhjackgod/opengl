@@ -13,6 +13,7 @@
 #include "Model.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #define WINDOWWIDTH 800.0f
 #define WINDOWHEIGHT 600.0f
 Camera camera(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -211,7 +212,7 @@ int main() {
 	};
 	CubeTexture sky(skyPic);
 	Shader m_TextureShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/depth_test.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/depth_test.fs");
-	Shader m_boxShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/frambuffer.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/frambuffer.fs");
+	//Shader m_boxShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/frambuffer.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/frambuffer.fs");
 	Shader m_skyShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/cube_map.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/cube_map.fs");
 	Shader m_ModelShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/model.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/model.fs");
 	m_TextureShader.use();
@@ -222,6 +223,13 @@ int main() {
 	
 	MyModel m_Model("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/model/nanosuit.obj");
 	
+	unsigned int ubo;
+	glGenBuffers(1, &ubo);
+	glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo, 0, 2 * sizeof(glm::mat4));
+
 	while (!glfwWindowShouldClose(window)) {
 		glEnable(GL_DEPTH_TEST);
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -231,17 +239,20 @@ int main() {
 		float delteTime = currentFram - lastTime;
 		lastTime = currentFram;
 		KeycallBack(window, delteTime);
-
+		
+		glm::mat4 view = camera.getViewMatrix();
+		glm::mat4 perspective = camera.getPerspective(WINDOWWIDTH, WINDOWHEIGHT);
+		glm::mat4 uboMatrices[2];
+		uboMatrices[0] = view;
+		uboMatrices[1] = perspective;
+		glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(uboMatrices), glm::value_ptr(uboMatrices[0]));
 		//sky cube
 		glDepthFunc(GL_LEQUAL);
 		glm::mat4  model2 = glm::mat4(1.0f);
 		//model2 = glm::translate(model2, glm::vec3(2.0f, 0.0f, 0.0f));
 		Render::BeginScene(m_skyShader, skyVertexArray);
-		glm::mat4 view = camera.getViewMatrix();
-		view = glm::mat4(glm::mat3(view));
-		glm::mat4 perspective = camera.getPerspective(WINDOWWIDTH, WINDOWHEIGHT);
-		m_skyShader.setMat4("view", view);
-		m_skyShader.setMat4("perspective", perspective);
+		
 		m_skyShader.setMat4("model", model2);
 		sky.Bind();
 		Render::RenderScene(36);
@@ -258,8 +269,6 @@ int main() {
 		glm::mat4 model1 = glm::mat4(1.0f);
 		model1 = glm::translate(model1, glm::vec3(-1.0f, 0.0f, -1.0f));
 		m_TextureShader.setMat4("model", model1);
-		glm::mat4 perview = camera.getViewPerspective(WINDOWWIDTH, WINDOWHEIGHT);
-		m_TextureShader.setMat4("projection", perview);
 		m_TextureShader.setVec3("cameraPos", camera.GetPosition());
 		sky.Bind();
 		Render::RenderScene(36);
@@ -267,8 +276,6 @@ int main() {
 		
 		m_ModelShader.use();
 		m_ModelShader.setMat4("model", glm::scale(glm::mat4(1.0f),glm::vec3(0.1f)));
-		m_ModelShader.setMat4("view", camera.getViewMatrix());
-		m_ModelShader.setMat4("projection", camera.getPerspective(WINDOWWIDTH, WINDOWHEIGHT));
 		m_ModelShader.setVec3("cameraPos", camera.GetPosition());
 		m_Model.Draw(m_ModelShader,sky);
 

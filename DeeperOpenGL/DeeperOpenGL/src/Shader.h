@@ -35,7 +35,12 @@ public:
 		int successver, successfrag, successprogram;
 		glGetShaderiv(verShader, GL_COMPILE_STATUS, &successver);
 		if (!successver) {
-			std::cout << "ver error" << std::endl;
+			int maxCount;
+			glGetShaderiv(verShader, GL_INFO_LOG_LENGTH, &maxCount);
+			std::vector<GLchar> info(maxCount);
+			glGetShaderInfoLog(verShader, maxCount, &maxCount, &info[0]);
+			std::cout<<ffile<<"\t";
+			std::cout << info.data() << std::endl;
 		}
 		glGetShaderiv(fragShader, GL_COMPILE_STATUS, &successfrag);
 		if (!successfrag) {

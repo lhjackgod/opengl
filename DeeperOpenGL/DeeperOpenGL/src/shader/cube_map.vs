@@ -1,13 +1,18 @@
-#version 330 core
+#version 420 core
 layout(location = 0) in vec3 aPos;
-uniform mat4 view;
-uniform mat4 perspective;
+layout(std140, binding = 0) uniform Matrics
+{
+    mat4 view;
+    mat4 perspective;
+};
 uniform mat4 model;
 
 out vec3 vPos;
 void main(){
     vPos = aPos;
-    vec4 pos = perspective * view * model * vec4(aPos, 1.0);
+    mat4 skyView = mat4(mat3(view));
+    //skyView[3] = vec4(0.0,0.0,0.0,1.0);
+    vec4 pos = perspective * skyView * model * vec4(aPos, 1.0);
     
     gl_Position = pos.xyww;
 }
