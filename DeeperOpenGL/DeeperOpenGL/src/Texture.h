@@ -13,9 +13,10 @@ private:
 };
 class CubeTexture {
 public:
-	CubeTexture(const std::vector<std::string>& tp);
+	CubeTexture(const std::vector<std::string>& tp = std::vector<std::string>());
 	void Bind(uint32_t slot = 0);
 	inline uint32_t GetCubeTexture() { return m_RendererID; }
+	bool hasTexture = false;
 private:
 	unsigned int m_RendererID;
 	std::vector<std::string> texturePath;

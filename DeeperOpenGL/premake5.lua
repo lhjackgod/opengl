@@ -10,6 +10,7 @@ IncludeDir = {}
 IncludeDir["GLFW"] = "D:/openglEnv/GLFW/glfw/include"
 IncludeDir["GLAD"] = "D:/openglEnv/GLAD/include"
 IncludeDir["GLM"] = "D:/openglEnv/glm-1.0.1"
+IncludeDir["Assimp"] = "D:/openglEnv/assimp-5.4.3/include"
 include "D:/openglEnv/GLAD"
 project "DeeperOpenGL"
     location "DeeperOpenGL"
@@ -28,12 +29,15 @@ project "DeeperOpenGL"
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.GLAD}",
         "%{prj.name}/src",
-        "%{IncludeDir.GLM}"
+        "%{IncludeDir.GLM}",
+        "%{IncludeDir.Assimp}"
     }
     links{
         "D:/openglEnv/GLFW/glfw/build/src/Debug/glfw3.lib",
-        "Glad"
+        "Glad",
+        "D:/openglEnv/assimp-5.4.3/build/lib/Debug/assimp-vc142-mtd.lib"
     }
+    
     defines{
         "GLFW_INCLUDE_NONE"
     }

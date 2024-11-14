@@ -10,6 +10,7 @@
 #include "Render.h"
 #include "Texture.h"
 #include "OpenGLVertexArray.h"
+#include "Model.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #define WINDOWWIDTH 800.0f
@@ -212,13 +213,14 @@ int main() {
 	Shader m_TextureShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/depth_test.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/depth_test.fs");
 	Shader m_boxShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/frambuffer.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/frambuffer.fs");
 	Shader m_skyShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/cube_map.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/cube_map.fs");
+	Shader m_ModelShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/model.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/model.fs");
 	m_TextureShader.use();
 	m_TextureShader.setInt("u_Texture", 0);
 	m_skyShader.use();
 	m_skyShader.setInt("sky", 0);
 	float lastTime = static_cast<float>(glfwGetTime());
 	
-
+	MyModel m_Model("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/model/nanosuit.obj");
 	
 	while (!glfwWindowShouldClose(window)) {
 		glEnable(GL_DEPTH_TEST);
@@ -263,7 +265,12 @@ int main() {
 		Render::RenderScene(36);
 
 		
-		
+		m_ModelShader.use();
+		m_ModelShader.setMat4("model", glm::scale(glm::mat4(1.0f),glm::vec3(0.1f)));
+		m_ModelShader.setMat4("view", camera.getViewMatrix());
+		m_ModelShader.setMat4("projection", camera.getPerspective(WINDOWWIDTH, WINDOWHEIGHT));
+		m_ModelShader.setVec3("cameraPos", camera.GetPosition());
+		m_Model.Draw(m_ModelShader,sky);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

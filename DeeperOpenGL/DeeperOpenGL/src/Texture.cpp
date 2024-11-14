@@ -33,6 +33,11 @@ void Texture::Bind(uint32_t slot)
 CubeTexture::CubeTexture(const std::vector<std::string>& tp)
 	:texturePath(tp)
 {
+	if (tp.size() == 0)
+	{
+		return;
+	}
+	hasTexture = true;
 	glGenTextures(1, &m_RendererID);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, m_RendererID);
 	for (int i = 0; i < texturePath.size(); i++) {

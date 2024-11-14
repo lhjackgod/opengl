@@ -6,7 +6,8 @@
                 "${workspaceFolder}/**",
                 "D:/openglEnv/GLAD/include",
                 "D:/openglEnv/glm-1.0.1",
-                "D:/openglEnv/GLFW/glfw/include"
+                "D:/openglEnv/GLFW/glfw/include",
+                "D:/openglEnv/assimp-5.4.3/include"
             ],
             "defines": [
                 "_DEBUG",
