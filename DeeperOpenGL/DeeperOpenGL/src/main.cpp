@@ -16,7 +16,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #define WINDOWWIDTH 800.0f
 #define WINDOWHEIGHT 600.0f
-Camera camera(glm::vec3(0.0f, 0.0f, 0.0f));
+Camera camera(glm::vec3(0.0f, 0.0f, 100.1f));
 float lastX = (float)WINDOWWIDTH / 2.0f;
 float lastY = (float)WINDOWHEIGHT / 2.0f;
 bool firtstMouse = true;
@@ -191,22 +191,12 @@ int main() {
 	-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
 	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
 	};
-	float quadVertices[] = {
-		// 位置          // 颜色
-		-0.05f,  0.05f, 0.0f,  1.0f, 0.0f, 0.0f,
-		 0.05f, -0.05f, 0.0f,  0.0f, 1.0f, 0.0f,
-		-0.05f, -0.05f, 0.0f,  0.0f, 0.0f, 1.0f,
-					   
-		-0.05f,  0.05f, 0.0f,  1.0f, 0.0f, 0.0f,
-		 0.05f, -0.05f, 0.0f,  0.0f, 1.0f, 0.0f,
-		 0.05f,  0.05f, 0.0f,  0.0f, 1.0f, 1.0f
-	};
+
 	OpenGLVertexArray cubeVertexArray(cubeVertices,sizeof(cubeVertices),1);
 	OpenGLVertexArray planeVertexArray(planeVertices,sizeof(planeVertices),1);
 	OpenGLVertexArray transparentVetexArray(transparentVertices, sizeof(transparentVertices),1);
 	OpenGLVertexArray skyVertexArray(skyboxVertices, sizeof(skyboxVertices),1);
 	OpenGLVertexArray useEnvirment(vertices, sizeof(vertices),2);
-	OpenGLVertexArray m_quad2DArray(quadVertices, sizeof(quadVertices), 2);
 	Texture cubeTexture("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/texture/marble.jpg");
 	Texture planeTexture("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/texture/metal.png");
 	Texture grassTexture("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/texture/grass.png");
@@ -228,7 +218,9 @@ int main() {
 	Shader m_ModelShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/model.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/model.fs");
 	Shader g_shader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/depth_test.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/depth_test.fs","D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/graphics.gs");
 	Shader m_ModelNormalShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/model.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/normal.fs","D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/model_graphics.gs");
-	Shader m_quad2DShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/quad.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/quad.fs");
+	Shader m_rockShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/rock.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/rock.fs");
+	Shader m_planetShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/planet.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/planet.fs");
+	
 	m_TextureShader.use();
 	m_TextureShader.setInt("u_Texture", 0);
 	m_skyShader.use();
@@ -236,55 +228,103 @@ int main() {
 	float lastTime = static_cast<float>(glfwGetTime());
 	
 	MyModel m_Model("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/model/nanosuit.obj");
-	
+	MyModel m_rockModel("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/model/rock.obj");
+	MyModel m_planetModel("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/model/planet.obj");
 	unsigned int ubo;
 	glGenBuffers(1, &ubo);
 	glBindBuffer(GL_UNIFORM_BUFFER, ubo);
 	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo, 0, 2 * sizeof(glm::mat4));
+	
 
-	glm::vec2 translations[100];
-	int index = 0;
-	float offset = 0.1f;
-	for (int y = -10; y < 10; y += 2) {
-		for (int x = -10; x < 10; x += 2) {
-			glm::vec2 translation;
-			translation.x = (float)x / 10.0f + offset;
-			translation.y = (float)y / 10.0f + offset;
-			translations[index++] = translation;
-		}
-	}
-	unsigned int quadVBOTranslate;
-	glGenBuffers(1, &quadVBOTranslate);
-	m_quad2DArray.Bind();
-	glBindBuffer(GL_ARRAY_BUFFER, quadVBOTranslate);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(translations), glm::value_ptr(translations[0]), GL_STATIC_DRAW);
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (void*)0);
-	glVertexAttribDivisor(2, 1);
-	glBindVertexArray(0);
 	while (!glfwWindowShouldClose(window)) {
 		
 
 		glEnable(GL_DEPTH_TEST);
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		Render::BeginScene(m_quad2DShader, m_quad2DArray);
+		float currentFram = static_cast<float> (glfwGetTime());
+		float delteTime = currentFram - lastTime;
+		lastTime = currentFram;
+		KeycallBack(window, delteTime);
+		glm::mat4 view = camera.getViewMatrix();
+		glm::mat4 perspective = camera.getPerspective(WINDOWWIDTH, WINDOWHEIGHT);
+		glm::mat4 uboMatrices[2];
+		uboMatrices[0] = view;
+		uboMatrices[1] = perspective;
+		glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(uboMatrices), glm::value_ptr(uboMatrices[0]));
 		
-		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100);
-		//float currentFram = static_cast<float> (glfwGetTime());
-		//float delteTime = currentFram - lastTime;
-		//lastTime = currentFram;
-		//KeycallBack(window, delteTime);
-		//glm::mat4 view = camera.getViewMatrix();
-		//glm::mat4 perspective = camera.getPerspective(WINDOWWIDTH, WINDOWHEIGHT);
-		//glm::mat4 uboMatrices[2];
-		//uboMatrices[0] = view;
-		//uboMatrices[1] = perspective;
-		//glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-		//glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(uboMatrices), glm::value_ptr(uboMatrices[0]));
+		unsigned int amount = 1000;
+		glm::mat4* modelMatrices;
+		modelMatrices = new glm::mat4[amount];
+		srand(glfwGetTime());
+		float radius = 50.0f;
+		float offset = 2.5f;
+		for (unsigned int i = 0; i < amount; i++)
+		{
+			glm::mat4 model(1.0f);
+			// 1. 位移：分布在半径为 'radius' 的圆形上，偏移的范围是 [-offset, offset]
+			float angle = (float)i / (float)amount * 360.0f;
+			float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+			float x = sin(angle) * radius + displacement;
+			displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+			float y = displacement * 0.4f; // 让行星带的高度比x和z的宽度要小
+			displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+			float z = cos(angle) * radius + displacement;
+			model = glm::translate(model, glm::vec3(x, y, z));
+
+			// 2. 缩放：在 0.05 和 0.25f 之间缩放
+			float scale = (rand() % 20) / 100.0f + 0.05;
+			model = glm::scale(model, glm::vec3(scale));
+
+			// 3. 旋转：绕着一个（半）随机选择的旋转轴向量进行随机的旋转
+			float rotAngle = (rand() % 360);
+			model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
+
+			modelMatrices[i] = model;
+		}
+
+		unsigned int rockModelvbo;
+		glGenBuffers(1, &rockModelvbo);
+		glBindBuffer(GL_ARRAY_BUFFER, rockModelvbo);
+		glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
+		
+		for (uint32_t i = 0; i < m_rockModel.getMeshNums(); i++)
+		{
+			Mesh& deelMesh = m_rockModel.getMesh(i);
+			glBindVertexArray(deelMesh.getVAO());
+			glBindBuffer(GL_ARRAY_BUFFER, rockModelvbo);
+			glEnableVertexAttribArray(3);
+			glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), 0);
+			glEnableVertexAttribArray(4);
+			glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+			glEnableVertexAttribArray(5);
+			glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4) * 2));
+			glEnableVertexAttribArray(6);
+			glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4) * 3));
+			glVertexAttribDivisor(3, 1);
+			glVertexAttribDivisor(4, 1);
+			glVertexAttribDivisor(5, 1);
+			glVertexAttribDivisor(6, 1);
+			glBindVertexArray(0);
+		}
+		m_rockModel.Draw(m_rockShader, amount);
+
+
+
+
+
+
+
+
+		m_planetShader.use();
+		glm::mat4 model(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
+		m_planetShader.setMat4("model", model);
+		m_planetModel.Draw(m_planetShader);
 		////sky cube
 		//glDepthFunc(GL_LEQUAL);
 		//glm::mat4  model2 = glm::mat4(1.0f);

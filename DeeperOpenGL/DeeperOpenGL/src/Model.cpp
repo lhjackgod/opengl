@@ -19,7 +19,7 @@ void Mesh::setupMesh()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), &indices[0], GL_STATIC_DRAW);
     glBindVertexArray(0);
 }
-void Mesh::Draw(Shader shader, CubeTexture sky)
+void Mesh::Draw(Shader shader, uint32_t amount, CubeTexture sky)
 {
     unsigned int diffuseNr = 1;
     unsigned int specularNr = 1;
@@ -60,7 +60,7 @@ void Mesh::Draw(Shader shader, CubeTexture sky)
         shader.setInt("haveEnviromentLight", 0);
     }
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0, amount);
     //glBindVertexArray(0);
     glActiveTexture(GL_TEXTURE0);
 }
@@ -75,11 +75,11 @@ MyModel::MyModel(const std::string& path)
     directory = path.substr(0, path.find_last_of('/'));
     ProcessNode(scene->mRootNode, scene);
 }
-void MyModel::Draw(Shader shader, CubeTexture sky)
+void MyModel::Draw(Shader shader, uint32_t amount, CubeTexture sky)
 {
     for (uint32_t i = 0; i < meshes.size(); i++)
     {
-        meshes[i].Draw(shader, sky);
+        meshes[i].Draw(shader, amount, sky);
     }
 }
 void MyModel::ProcessNode(const aiNode* node, const aiScene* scene)

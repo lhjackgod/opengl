@@ -1,4 +1,8 @@
 ﻿  main.cpp
+D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\Model.h(41,25): warning C4267: “return”: 从“size_t”转换到“uint32_t”，可能丢失数据
 D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(33,53): warning C4244: “参数”: 从“float”转换到“int”，可能丢失数据
 D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(33,40): warning C4244: “参数”: 从“float”转换到“int”，可能丢失数据
+D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(262,20): warning C4244: “参数”: 从“double”转换到“unsigned int”，可能丢失数据
+D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(279,16): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
+D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(283,19): warning C4244: “初始化”: 从“int”转换到“float”，可能丢失数据
   DeeperOpenGL.vcxproj -> D:\learnOpengl\LearnOpenGL\DeeperOpenGL\bin\Debug-windows-x86_64\DeeperOpenGL\DeeperOpenGL.exe

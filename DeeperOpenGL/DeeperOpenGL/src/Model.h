@@ -22,7 +22,9 @@ public:
 	Mesh(std::vector<Point> p, std::vector<unsigned int> indice, std::vector<m_Texture> ts)
 		:points(p), indices(indice), textures(ts){setupMesh();}
 	
-	void Draw(Shader shader, CubeTexture sky = CubeTexture());
+	void Draw(Shader shader, uint32_t amount = 1,  CubeTexture sky = CubeTexture());
+	uint32_t getVAO() { return VAO; }
+	std::vector<unsigned int> getIndices() { return indices; }
 private:
 	uint32_t VAO, VBO, EBO;
 	std::vector<Point> points;
@@ -35,7 +37,9 @@ class MyModel
 {
 public:
 	MyModel(const std::string& path);
-	void Draw(Shader shader, CubeTexture sky = CubeTexture());
+	void Draw(Shader shader, uint32_t amount = 1, CubeTexture sky = CubeTexture());
+	uint32_t getMeshNums() { return meshes.size(); }
+	Mesh getMesh(uint32_t index) { return meshes[index]; }
 private:
 	Mesh ProcessMesh(const aiMesh* mesh, const aiScene* scene);
 	void ProcessNode(const aiNode* node, const aiScene* scene);
