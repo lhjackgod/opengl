@@ -215,6 +215,8 @@ int main() {
 	//Shader m_boxShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/frambuffer.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/frambuffer.fs");
 	Shader m_skyShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/cube_map.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/cube_map.fs");
 	Shader m_ModelShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/model.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/model.fs");
+	Shader g_shader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/depth_test.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/depth_test.fs","D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/graphics.gs");
+	Shader m_ModelNormalShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/model.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/normal.fs","D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/model_graphics.gs");
 	m_TextureShader.use();
 	m_TextureShader.setInt("u_Texture", 0);
 	m_skyShader.use();
@@ -231,6 +233,8 @@ int main() {
 	glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo, 0, 2 * sizeof(glm::mat4));
 
 	while (!glfwWindowShouldClose(window)) {
+		
+
 		glEnable(GL_DEPTH_TEST);
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -239,7 +243,6 @@ int main() {
 		float delteTime = currentFram - lastTime;
 		lastTime = currentFram;
 		KeycallBack(window, delteTime);
-		
 		glm::mat4 view = camera.getViewMatrix();
 		glm::mat4 perspective = camera.getPerspective(WINDOWWIDTH, WINDOWHEIGHT);
 		glm::mat4 uboMatrices[2];
@@ -265,11 +268,11 @@ int main() {
 
 		//cube
 		glDepthFunc(GL_LESS);
-		Render::BeginScene(m_TextureShader, useEnvirment);
+		Render::BeginScene(g_shader, useEnvirment);
 		glm::mat4 model1 = glm::mat4(1.0f);
 		model1 = glm::translate(model1, glm::vec3(-1.0f, 0.0f, -1.0f));
-		m_TextureShader.setMat4("model", model1);
-		m_TextureShader.setVec3("cameraPos", camera.GetPosition());
+		g_shader.setMat4("model", model1);
+		g_shader.setVec3("cameraPos", camera.GetPosition());
 		sky.Bind();
 		Render::RenderScene(36);
 
@@ -278,7 +281,10 @@ int main() {
 		m_ModelShader.setMat4("model", glm::scale(glm::mat4(1.0f),glm::vec3(0.1f)));
 		m_ModelShader.setVec3("cameraPos", camera.GetPosition());
 		m_Model.Draw(m_ModelShader,sky);
-
+		m_ModelNormalShader.use();
+		m_ModelNormalShader.setMat4("model", glm::scale(glm::mat4(1.0f), glm::vec3(0.1f)));
+		m_ModelNormalShader.setVec3("cameraPos", camera.GetPosition());
+		m_Model.Draw(m_ModelNormalShader);
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}

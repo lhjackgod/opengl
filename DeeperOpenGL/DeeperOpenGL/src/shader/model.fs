@@ -2,9 +2,13 @@
 
 layout(location = 0) out vec4 FragColor;
 
-in vec3 vNormal;
-in vec2 vTexCoord;
-in vec4 vPos;
+in VS_OUT
+{
+    vec3 vNormal;
+    vec2 vTexCoord;
+    vec4 vPos;
+} fs_in;
+
 
 struct Texture
 {
@@ -81,19 +85,19 @@ void main()
 {
     
 
-    vec3 diffuseColor1 = texture(material.diffuse1, vTexCoord).rgb;
-    vec3 diffuseColor2 = texture(material.diffuse2, vTexCoord).rgb;
-    vec3 diffuseColor3 = texture(material.diffuse3, vTexCoord).rgb;
+    vec3 diffuseColor1 = texture(material.diffuse1, fs_in.vTexCoord).rgb;
+    vec3 diffuseColor2 = texture(material.diffuse2, fs_in.vTexCoord).rgb;
+    vec3 diffuseColor3 = texture(material.diffuse3, fs_in.vTexCoord).rgb;
 
-    vec3 specularColor1 = texture(material.specular1, vTexCoord).rgb;
+    vec3 specularColor1 = texture(material.specular1, fs_in.vTexCoord).rgb;
     float shininess = material.k;
 
-    vec3 ambientColor1 = texture(material.ambient1, vTexCoord).rgb;
+    vec3 ambientColor1 = texture(material.ambient1, fs_in.vTexCoord).rgb;
 
-    vec3 heightNormal = texture(material.height1, vTexCoord).rgb;
-    vec3 normal = heightNormal + vNormal;
+    vec3 heightNormal = texture(material.height1, fs_in.vTexCoord).rgb;
+    vec3 normal = heightNormal + fs_in.vNormal;
 
-    vec3 objectPos = (vPos / vPos.w).xyz;
+    vec3 objectPos = (fs_in.vPos / fs_in.vPos.w).xyz;
 
     vec3 finalColor = calculateDiffuse(diffuseColor1, normal, cameraPos, objectPos) + calculateSpecular(specularColor1, normal, cameraPos, objectPos);
     FragColor = vec4(finalColor, 1.0);

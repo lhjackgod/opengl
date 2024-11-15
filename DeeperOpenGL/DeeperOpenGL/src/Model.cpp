@@ -61,7 +61,7 @@ void Mesh::Draw(Shader shader, CubeTexture sky)
     }
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
+    //glBindVertexArray(0);
     glActiveTexture(GL_TEXTURE0);
 }
 MyModel::MyModel(const std::string& path)
