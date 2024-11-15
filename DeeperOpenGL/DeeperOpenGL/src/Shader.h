@@ -102,6 +102,7 @@ public:
 	void setMat4(const std::string& name, glm::mat4 value);
 	void setVec4(const std::string& name, glm::vec4 value);
 	void setVec3(const std::string& name, glm::vec3 value);
+	void setVec2(const std::string& name, glm::vec2 value);
 	inline void use() { glUseProgram(m_RendererID); }
 private:
 	uint32_t m_RendererID;

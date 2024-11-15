@@ -191,11 +191,22 @@ int main() {
 	-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
 	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
 	};
+	float quadVertices[] = {
+		// Î»ÖÃ          // ÑÕÉ«
+		-0.05f,  0.05f, 0.0f,  1.0f, 0.0f, 0.0f,
+		 0.05f, -0.05f, 0.0f,  0.0f, 1.0f, 0.0f,
+		-0.05f, -0.05f, 0.0f,  0.0f, 0.0f, 1.0f,
+					   
+		-0.05f,  0.05f, 0.0f,  1.0f, 0.0f, 0.0f,
+		 0.05f, -0.05f, 0.0f,  0.0f, 1.0f, 0.0f,
+		 0.05f,  0.05f, 0.0f,  0.0f, 1.0f, 1.0f
+	};
 	OpenGLVertexArray cubeVertexArray(cubeVertices,sizeof(cubeVertices),1);
 	OpenGLVertexArray planeVertexArray(planeVertices,sizeof(planeVertices),1);
 	OpenGLVertexArray transparentVetexArray(transparentVertices, sizeof(transparentVertices),1);
 	OpenGLVertexArray skyVertexArray(skyboxVertices, sizeof(skyboxVertices),1);
 	OpenGLVertexArray useEnvirment(vertices, sizeof(vertices),2);
+	OpenGLVertexArray m_quad2DArray(quadVertices, sizeof(quadVertices), 2);
 	Texture cubeTexture("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/texture/marble.jpg");
 	Texture planeTexture("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/texture/metal.png");
 	Texture grassTexture("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/assets/texture/grass.png");
@@ -217,6 +228,7 @@ int main() {
 	Shader m_ModelShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/model.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/model.fs");
 	Shader g_shader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/depth_test.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/depth_test.fs","D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/graphics.gs");
 	Shader m_ModelNormalShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/model.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/normal.fs","D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/model_graphics.gs");
+	Shader m_quad2DShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/quad.vs", "D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/quad.fs");
 	m_TextureShader.use();
 	m_TextureShader.setInt("u_Texture", 0);
 	m_skyShader.use();
@@ -232,6 +244,17 @@ int main() {
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo, 0, 2 * sizeof(glm::mat4));
 
+	glm::vec2 translations[100];
+	int index = 0;
+	float offset = 0.1f;
+	for (int y = -10; y < 10; y += 2) {
+		for (int x = -10; x < 10; x += 2) {
+			glm::vec2 translation;
+			translation.x = (float)x / 10.0f + offset;
+			translation.y = (float)y / 10.0f + offset;
+			translations[index++] = translation;
+		}
+	}
 	while (!glfwWindowShouldClose(window)) {
 		
 
@@ -239,52 +262,58 @@ int main() {
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		float currentFram = static_cast<float> (glfwGetTime());
-		float delteTime = currentFram - lastTime;
-		lastTime = currentFram;
-		KeycallBack(window, delteTime);
-		glm::mat4 view = camera.getViewMatrix();
-		glm::mat4 perspective = camera.getPerspective(WINDOWWIDTH, WINDOWHEIGHT);
-		glm::mat4 uboMatrices[2];
-		uboMatrices[0] = view;
-		uboMatrices[1] = perspective;
-		glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(uboMatrices), glm::value_ptr(uboMatrices[0]));
-		//sky cube
-		glDepthFunc(GL_LEQUAL);
-		glm::mat4  model2 = glm::mat4(1.0f);
-		//model2 = glm::translate(model2, glm::vec3(2.0f, 0.0f, 0.0f));
-		Render::BeginScene(m_skyShader, skyVertexArray);
-		
-		m_skyShader.setMat4("model", model2);
-		sky.Bind();
-		Render::RenderScene(36);
+		Render::BeginScene(m_quad2DShader, m_quad2DArray);
+		for (int i = 0; i < 100; i++)
+		{
+			m_quad2DShader.setVec2(("offset[" + std::to_string(i) + "]"), translations[i]);
+		}
+		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100);
+		//float currentFram = static_cast<float> (glfwGetTime());
+		//float delteTime = currentFram - lastTime;
+		//lastTime = currentFram;
+		//KeycallBack(window, delteTime);
+		//glm::mat4 view = camera.getViewMatrix();
+		//glm::mat4 perspective = camera.getPerspective(WINDOWWIDTH, WINDOWHEIGHT);
+		//glm::mat4 uboMatrices[2];
+		//uboMatrices[0] = view;
+		//uboMatrices[1] = perspective;
+		//glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+		//glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(uboMatrices), glm::value_ptr(uboMatrices[0]));
+		////sky cube
+		//glDepthFunc(GL_LEQUAL);
+		//glm::mat4  model2 = glm::mat4(1.0f);
+		////model2 = glm::translate(model2, glm::vec3(2.0f, 0.0f, 0.0f));
+		//Render::BeginScene(m_skyShader, skyVertexArray);
+		//
+		//m_skyShader.setMat4("model", model2);
+		//sky.Bind();
+		//Render::RenderScene(36);
 
-		//plane
-		/*Render::BeginScene(m_TextureShader, planeVertexArray);
-		m_TextureShader.setMat4("model", glm::mat4(1.0f));
-		planeTexture.Bind();
-		Render::RenderScene(6);*/
+		////plane
+		///*Render::BeginScene(m_TextureShader, planeVertexArray);
+		//m_TextureShader.setMat4("model", glm::mat4(1.0f));
+		//planeTexture.Bind();
+		//Render::RenderScene(6);*/
 
-		//cube
-		glDepthFunc(GL_LESS);
-		Render::BeginScene(g_shader, useEnvirment);
-		glm::mat4 model1 = glm::mat4(1.0f);
-		model1 = glm::translate(model1, glm::vec3(-1.0f, 0.0f, -1.0f));
-		g_shader.setMat4("model", model1);
-		g_shader.setVec3("cameraPos", camera.GetPosition());
-		sky.Bind();
-		Render::RenderScene(36);
+		////cube
+		//glDepthFunc(GL_LESS);
+		//Render::BeginScene(g_shader, useEnvirment);
+		//glm::mat4 model1 = glm::mat4(1.0f);
+		//model1 = glm::translate(model1, glm::vec3(-1.0f, 0.0f, -1.0f));
+		//g_shader.setMat4("model", model1);
+		//g_shader.setVec3("cameraPos", camera.GetPosition());
+		//sky.Bind();
+		//Render::RenderScene(36);
 
-		
-		m_ModelShader.use();
-		m_ModelShader.setMat4("model", glm::scale(glm::mat4(1.0f),glm::vec3(0.1f)));
-		m_ModelShader.setVec3("cameraPos", camera.GetPosition());
-		m_Model.Draw(m_ModelShader,sky);
-		m_ModelNormalShader.use();
-		m_ModelNormalShader.setMat4("model", glm::scale(glm::mat4(1.0f), glm::vec3(0.1f)));
-		m_ModelNormalShader.setVec3("cameraPos", camera.GetPosition());
-		m_Model.Draw(m_ModelNormalShader);
+		//
+		//m_ModelShader.use();
+		//m_ModelShader.setMat4("model", glm::scale(glm::mat4(1.0f),glm::vec3(0.1f)));
+		//m_ModelShader.setVec3("cameraPos", camera.GetPosition());
+		//m_Model.Draw(m_ModelShader,sky);
+		//m_ModelNormalShader.use();
+		//m_ModelNormalShader.setMat4("model", glm::scale(glm::mat4(1.0f), glm::vec3(0.1f)));
+		//m_ModelNormalShader.setVec3("cameraPos", camera.GetPosition());
+		//m_Model.Draw(m_ModelNormalShader);
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
