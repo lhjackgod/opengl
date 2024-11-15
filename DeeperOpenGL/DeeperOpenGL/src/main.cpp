@@ -255,6 +255,15 @@ int main() {
 			translations[index++] = translation;
 		}
 	}
+	unsigned int quadVBOTranslate;
+	glGenBuffers(1, &quadVBOTranslate);
+	m_quad2DArray.Bind();
+	glBindBuffer(GL_ARRAY_BUFFER, quadVBOTranslate);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(translations), glm::value_ptr(translations[0]), GL_STATIC_DRAW);
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (void*)0);
+	glVertexAttribDivisor(2, 1);
+	glBindVertexArray(0);
 	while (!glfwWindowShouldClose(window)) {
 		
 
@@ -263,10 +272,7 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		Render::BeginScene(m_quad2DShader, m_quad2DArray);
-		for (int i = 0; i < 100; i++)
-		{
-			m_quad2DShader.setVec2(("offset[" + std::to_string(i) + "]"), translations[i]);
-		}
+		
 		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100);
 		//float currentFram = static_cast<float> (glfwGetTime());
 		//float delteTime = currentFram - lastTime;
