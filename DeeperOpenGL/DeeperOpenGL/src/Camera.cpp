@@ -1,7 +1,7 @@
 #include "Camera.h"
 const glm::vec3 Camera::WorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
 const float Camera::m_KeyMoveSpeed = 2.5f;
-const float Camera::m_MouseSensitive = 0.01f;
+const float Camera::m_MouseSensitive = 0.0091f;
 
 Camera::Camera(glm::vec3 position):
 	m_Position(position)
