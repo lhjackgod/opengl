@@ -30,7 +30,7 @@ int main() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_OPENGL_CORE_PROFILE, GLFW_OPENGL_PROFILE);
-	glfwWindowHint(GL_SAMPLES, 4);
+
 	GLFWwindow* window = glfwCreateWindow(WINDOWWIDTH, WINDOWHEIGHT, "deeperOpengl", NULL, NULL);
 	glfwMakeContextCurrent(window);
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -85,10 +85,20 @@ int main() {
         -0.5f,  0.5f,  0.5f,  
         -0.5f,  0.5f, -0.5f
     };
-	OpenGLVertexArray m_CubeArray(cubeVertices, sizeof(cubeVertices), 0);
-	
-	Shader m_cubeShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/cube.vs","D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/cube.fs");
+	float quadVertices[] = {   // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+        // positions   // texCoords
+        -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+         1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
 
+        -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+         1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+         1.0f,  1.0f, 0.0f, 1.0f, 1.0f
+    };
+	OpenGLVertexArray m_CubeArray(cubeVertices, sizeof(cubeVertices), 0);
+	OpenGLVertexArray m_quadArray(quadVertices, sizeof(quadVertices), 1);
+	Shader m_cubeShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/cube.vs","D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/cube.fs");
+	Shader m_quadShader("D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/quad.vs","D:/learnOpengl/LearnOpenGL/DeeperOpenGL/DeeperOpenGL/src/shader/quad.fs");
 	
 	float lastTime = static_cast<float>(glfwGetTime());
 	
@@ -99,12 +109,51 @@ int main() {
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo, 0, 2 * sizeof(glm::mat4));
 	
+	unsigned int fbo;
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
+	unsigned int colormb;
+	glGenTextures(1, &colormb);
+	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, colormb);
+	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGB, WINDOWWIDTH, WINDOWHEIGHT, GL_TRUE);
+	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, colormb, 0);
+
+	unsigned int renderbufferm;
+	glGenRenderbuffers(1, &renderbufferm);
+	glBindRenderbuffer(GL_RENDERBUFFER ,renderbufferm);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, WINDOWWIDTH, WINDOWHEIGHT);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbufferm);
+	if(glCheckFramebufferStatus(GL_FRAMEBUFFER)!=GL_FRAMEBUFFER_COMPLETE){
+		std::cout<<"error"<<std::endl;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	unsigned int frambuffer;
+	glGenFramebuffers(1, &frambuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, frambuffer);
+
+	unsigned int sceenTex;
+	glGenTextures(1, &sceenTex);
+	glBindTexture(GL_TEXTURE_2D, sceenTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WINDOWWIDTH, WINDOWHEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, sceenTex, 0);
+	if(glCheckFramebufferStatus(GL_FRAMEBUFFER)!=GL_FRAMEBUFFER_COMPLETE)
+	{
+		std::cout<<"error2"<<std::endl;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	m_quadShader.use();
+	m_quadShader.setInt("tex", 0);
 	while (!glfwWindowShouldClose(window)) {
 		
-
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_MULTISAMPLE);
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		float currentFram = static_cast<float> (glfwGetTime());
@@ -122,6 +171,19 @@ int main() {
 		Render::BeginScene(m_cubeShader, m_CubeArray);
 		m_cubeShader.setMat4("model", glm::mat4(1.0f));
 		Render::RenderScene(36);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frambuffer);
+		glBlitFramebuffer(0, 0, WINDOWWIDTH, WINDOWHEIGHT, 0, 0, WINDOWWIDTH, WINDOWHEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClearColor(0.0,0.0,0.0,1.0);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glDisable(GL_DEPTH_TEST);
+
+		Render::BeginScene(m_quadShader, m_quadArray);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, sceenTex);
+		Render::RenderScene(6);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

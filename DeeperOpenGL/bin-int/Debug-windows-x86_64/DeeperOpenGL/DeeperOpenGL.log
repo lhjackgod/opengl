@@ -2,4 +2,14 @@
 D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\Model.h(41,25): warning C4267: “return”: 从“size_t”转换到“uint32_t”，可能丢失数据
 D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(34,53): warning C4244: “参数”: 从“float”转换到“int”，可能丢失数据
 D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(34,40): warning C4244: “参数”: 从“float”转换到“int”，可能丢失数据
+D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(119,77): warning C4244: “参数”: 从“float”转换到“GLsizei”，可能丢失数据
+D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(119,64): warning C4244: “参数”: 从“float”转换到“GLsizei”，可能丢失数据
+D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(126,89): warning C4244: “参数”: 从“float”转换到“GLsizei”，可能丢失数据
+D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(126,76): warning C4244: “参数”: 从“float”转换到“GLsizei”，可能丢失数据
+D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(141,54): warning C4244: “参数”: 从“float”转换到“GLsizei”，可能丢失数据
+D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(141,41): warning C4244: “参数”: 从“float”转换到“GLsizei”，可能丢失数据
+D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(176,73): warning C4244: “参数”: 从“float”转换到“GLint”，可能丢失数据
+D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(176,60): warning C4244: “参数”: 从“float”转换到“GLint”，可能丢失数据
+D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(176,40): warning C4244: “参数”: 从“float”转换到“GLint”，可能丢失数据
+D:\learnOpengl\LearnOpenGL\DeeperOpenGL\DeeperOpenGL\src\main.cpp(176,27): warning C4244: “参数”: 从“float”转换到“GLint”，可能丢失数据
   DeeperOpenGL.vcxproj -> D:\learnOpengl\LearnOpenGL\DeeperOpenGL\bin\Debug-windows-x86_64\DeeperOpenGL\DeeperOpenGL.exe
