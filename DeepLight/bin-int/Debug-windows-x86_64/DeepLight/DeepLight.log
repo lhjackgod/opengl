@@ -1,0 +1,3 @@
+﻿  main.cpp
+D:\learnOpengl\LearnOpenGL\DeepLight\DeepLight\src\main.cpp(22,39): warning C4267: “参数”: 从“size_t”转换到“GLenum”，可能丢失数据
+  DeepLight.vcxproj -> D:\learnOpengl\LearnOpenGL\DeepLight\bin\Debug-windows-x86_64\DeepLight\DeepLight.exe
