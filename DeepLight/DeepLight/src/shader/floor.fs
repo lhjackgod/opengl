@@ -34,5 +34,7 @@ void main()
         vec3 reflectDir = reflect(-lightDir, normal);
         specular_light_contribute = pow(max(dot(reflectDir, cameraDir), 0.0), 32.0) * vec3(1.0);
     }
-    FragColor = vec4(clamp(duffse_light_contribute + ambient_light_contribute + specular_light_contribute, 0.0, 1.0), 1.0);
+    vec3 resultColor = clamp(duffse_light_contribute + ambient_light_contribute + specular_light_contribute, 0.0, 1.0);
+
+    FragColor = vec4(pow(resultColor, vec3(1.0f / 2.2)), 1.0);
 }

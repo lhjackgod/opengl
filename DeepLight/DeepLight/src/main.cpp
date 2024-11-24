@@ -25,6 +25,7 @@ static void bindTexture(uint32_t id, size_t slot)
 uint32_t GetTexture(const std::string& tex);
 struct UserData {
     int useBinPhong = 1;
+    bool useGamma = false;
 }userData;
 int main()
 {
@@ -47,12 +48,19 @@ int main()
     });
     glfwSetWindowUserPointer(window, &userData);
     glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+        UserData* u_Data = (UserData*)glfwGetWindowUserPointer(window);
         if (key == GLFW_KEY_B)
         {
             if (action == GLFW_PRESS)
             {
-                UserData* u_Data = (UserData*) glfwGetWindowUserPointer(window);
                 u_Data->useBinPhong ^= 1;
+            }
+        }
+        if (key == GLFW_KEY_P)
+        {
+            if (action == GLFW_PRESS)
+            {
+                u_Data->useGamma ^= 1;
             }
         }
     });
@@ -86,6 +94,10 @@ int main()
         ProcessInput(window, nowTime - lastTime);
         lastTime = nowTime;
         glEnable(GL_DEPTH_TEST);
+        if (userData.useGamma)
+            glEnable(GL_FRAMEBUFFER_SRGB);
+        else
+            glDisable(GL_FRAMEBUFFER_SRGB);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
