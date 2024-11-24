@@ -25,7 +25,7 @@ static void bindTexture(uint32_t id, size_t slot)
 uint32_t GetTexture(const std::string& tex);
 struct UserData {
     int useBinPhong = 1;
-    bool useGamma = false;
+    bool usequad = false;
 }userData;
 int main()
 {
@@ -60,7 +60,7 @@ int main()
         {
             if (action == GLFW_PRESS)
             {
-                u_Data->useGamma ^= 1;
+                u_Data->usequad ^= 1;
             }
         }
     });
@@ -94,10 +94,6 @@ int main()
         ProcessInput(window, nowTime - lastTime);
         lastTime = nowTime;
         glEnable(GL_DEPTH_TEST);
-        if (userData.useGamma)
-            glEnable(GL_FRAMEBUFFER_SRGB);
-        else
-            glDisable(GL_FRAMEBUFFER_SRGB);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -114,6 +110,10 @@ int main()
         m_FloorShader.SetValue("uCameraPos", camera.GetPosition());
         m_FloorShader.SetValue("uLightPos", glm::vec3(0.0f, 0.0f, 0.0f));
         m_FloorShader.SetValue("uBlinnPhong", userData.useBinPhong);
+        if (userData.usequad)
+            m_FloorShader.SetValue("attenuationTimes", 2);
+        else
+            m_FloorShader.SetValue("attenuationTimes", 1);
         m_FloorVertexArray.Bind();
         bindTexture(woodPng, 0);
         glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -160,20 +160,23 @@ uint32_t GetTexture(const std::string& tex)
     {
         std::cout << "no tex" << std::endl;
     }
-    GLenum dataFormat;
+    GLenum dataFormat, internalFormat;
     switch (channel)
     {
     case 1:
         dataFormat = GL_RED;
+        internalFormat = GL_RED;
         break;
     case 3:
         dataFormat = GL_RGB;
+        internalFormat = GL_SRGB;
         break;
     case 4:
         dataFormat = GL_RGBA;
+        internalFormat = GL_SRGB_ALPHA;
         break;
     }
-    glTexImage2D(GL_TEXTURE_2D, 0, dataFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);

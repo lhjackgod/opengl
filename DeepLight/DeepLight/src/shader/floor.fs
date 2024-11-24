@@ -11,12 +11,15 @@ uniform vec3 uCameraPos;
 uniform vec3 uLightPos;
 
 uniform int uBlinnPhong;
+uniform int attenuationTimes;
 void main()
 {
     vec3 diffuseColor = vec3(texture(uTexture, vTexCoord));
     vec3 normal = normalize(vNormal);
     vec3 lightDir = normalize(uLightPos - vFragPos);
     vec3 cameraDir = normalize(uCameraPos - vFragPos);
+
+    float distance = length(uLightPos - vFragPos);
 
     //diffuse
     vec3 duffse_light_contribute = max(dot(normal, lightDir), 0.0) * diffuseColor * vec3(1.0);
@@ -36,5 +39,5 @@ void main()
     }
     vec3 resultColor = clamp(duffse_light_contribute + ambient_light_contribute + specular_light_contribute, 0.0, 1.0);
 
-    FragColor = vec4(pow(resultColor, vec3(1.0f / 2.2)), 1.0);
+    FragColor = vec4(pow(resultColor, vec3(1.0f / 2.2)) * pow((1.0 / distance), attenuationTimes), 1.0);
 }
