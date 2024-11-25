@@ -16,13 +16,13 @@ uniform sampler2D depthMap;
 uniform vec3 uCameraPos;
 uniform vec3 uLightPos;
 
-float is_visable(vec4 fragPosLightSpace)
+float is_visable(vec4 fragPosLightSpace, float bias)
 {
     vec3 frag_pos_light_space = fragPosLightSpace.xyz / fragPosLightSpace.w;
     frag_pos_light_space = frag_pos_light_space * 0.5 + 0.5;
     float closeDepth = texture(depthMap, frag_pos_light_space.xy).r;
 
-    float visibility = frag_pos_light_space.z > closeDepth ? 0.0 : 1.0;
+    float visibility = frag_pos_light_space.z > closeDepth + bias ? 0.0 : 1.0;
     return visibility;
 }
 void main()
@@ -42,7 +42,11 @@ void main()
     vec3 specular_light_contribute = vec3(0.0);
     vec3 halfwayDir = normalize(lightDir + cameraDir);
     specular_light_contribute = pow(max(dot(normal, halfwayDir), 0.0), 64.0) * vec3(1.0);
-    vec3 resultColor = clamp((duffse_light_contribute + specular_light_contribute) * is_visable(fs_in.FragPosLightSpace) +
+
+    //calculate bias
+    float bias = max(0.05 * (1.0 - dot(lightDir, normal)), 0.005);
+
+    vec3 resultColor = clamp((duffse_light_contribute + specular_light_contribute) * is_visable(fs_in.FragPosLightSpace, bias) +
     ambient_light_contribute
     , 0.0, 1.0);
 
