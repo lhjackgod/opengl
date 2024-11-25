@@ -128,8 +128,10 @@ int main()
         glBindTexture(GL_TEXTURE_2D, depthTex);
         
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        float borderColor[] = { 1.0f, 1.0f, 1.0f ,1.0f };
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
@@ -152,8 +154,7 @@ int main()
         glBindFramebuffer(GL_FRAMEBUFFER, depthFbo);
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glEnable(GL_DEPTH_TEST);
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_FRONT);
+        
         glClear(GL_DEPTH_BUFFER_BIT);
         m_RenderDepth.use();
         m_RenderDepth.SetValue("lightSpaceMatrix", LightOrtho * LightView);
@@ -162,7 +163,7 @@ int main()
         
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, SCREENWIDTH, SCREENHEIGHT);
-        glDisable(GL_CULL_FACE);
+
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         //uniform

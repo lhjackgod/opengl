@@ -20,6 +20,10 @@ float is_visable(vec4 fragPosLightSpace, float bias)
 {
     vec3 frag_pos_light_space = fragPosLightSpace.xyz / fragPosLightSpace.w;
     frag_pos_light_space = frag_pos_light_space * 0.5 + 0.5;
+    if(frag_pos_light_space.z > 1.0)
+    {
+        return 1.0;
+    }
     float closeDepth = texture(depthMap, frag_pos_light_space.xy).r;
 
     float visibility = frag_pos_light_space.z > closeDepth + bias ? 0.0 : 1.0;
