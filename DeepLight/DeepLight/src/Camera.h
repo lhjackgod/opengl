@@ -13,9 +13,10 @@ public:
 	void MouseMove(float xoffset, float yoffset, bool isConstantPitch = true);
 	void KeyClick(KEYTYPE type, float deltaTime);
 	void MouseScroll(float yoffset);
+	void setPosition(glm::vec3 pos);
 	glm::mat4 GetViewMatrix();
 	glm::mat4 GetPerspectMatrix(const float& aspect);
-	glm::vec3 GetPosition() const { return m_Position; }
+	glm::vec3 GetPosition() const { return m_Position;}
 private:
 	glm::vec3 WorldUP{0.0f, 1.0f, 0.0f};
 	float pitch = 0.0f;

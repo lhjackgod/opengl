@@ -10,4 +10,5 @@ public:
 	
 private:
 	unsigned int m_RendererID;
+	
 };

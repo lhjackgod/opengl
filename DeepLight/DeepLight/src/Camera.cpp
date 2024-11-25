@@ -53,7 +53,11 @@ void Camera::MouseScroll(float yoffset)
 		m_FOV = 45.0f;
 	else if (m_FOV < 1.0f)
 		m_FOV = 1.0f;
-	std::cout << m_FOV << std::endl;
+}
+
+void Camera::setPosition(glm::vec3 pos)
+{
+	m_Position = pos;
 }
 
 glm::mat4 Camera::GetViewMatrix()
@@ -76,4 +80,5 @@ void Camera::Recalculate()
 
 	m_Right = glm::normalize(glm::cross(front, WorldUP));
 	m_Up = glm::normalize(glm::cross(m_Right, m_Front));
+	
 }
