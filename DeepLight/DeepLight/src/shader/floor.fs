@@ -20,14 +20,29 @@ float is_visable(vec4 fragPosLightSpace, float bias)
 {
     vec3 frag_pos_light_space = fragPosLightSpace.xyz / fragPosLightSpace.w;
     frag_pos_light_space = frag_pos_light_space * 0.5 + 0.5;
+    float closeDepth = texture(depthMap, frag_pos_light_space.xy).r;
+    float currentDepth = frag_pos_light_space.z;
+    //get per pixel step
+    vec2 pixelStep = 1.0 / textureSize(depthMap, 0);
+
+    float sampleNums = 9.0;
+    float visibility = 0.0;
+
+    
+    for(int i = -1; i <= 1; i++)
+    {
+        for(int j = -1; j <= 1; j++)
+        {
+            float pcfDepth = texture(depthMap, frag_pos_light_space.xy + vec2(i, j) * pixelStep).r;
+            visibility += (currentDepth > pcfDepth + bias ? 0.0 : 1.0);
+        }
+    }
     if(frag_pos_light_space.z > 1.0)
     {
         return 1.0;
     }
-    float closeDepth = texture(depthMap, frag_pos_light_space.xy).r;
-
-    float visibility = frag_pos_light_space.z > closeDepth + bias ? 0.0 : 1.0;
-    return visibility;
+    
+    return visibility / sampleNums;
 }
 void main()
 {

@@ -119,7 +119,7 @@ int main()
     glBindBufferRange(GL_UNIFORM_BUFFER, 2, ubo, 0, sizeof(glm::mat4) * 2);
     
     uint32_t depthFbo, depthTex;
-    const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+    const unsigned int SHADOW_WIDTH = 3840, SHADOW_HEIGHT = 2160;
     {
         glGenFramebuffers(1, &depthFbo);
         glBindFramebuffer(GL_FRAMEBUFFER, depthFbo);
