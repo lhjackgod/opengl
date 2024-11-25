@@ -99,14 +99,14 @@ int main()
     });
     
 
-    Shader m_FloorShader("src/shader/floor.vs", "src/shader/floor.fs");
+    Shader m_SceneShader("src/shader/floor.vs", "src/shader/floor.fs");
     Shader m_RenderDepth("src/shader/GenDepth.vs", "src/shader/GenDepth.fs");
     Shader m_DebugShader("src/shader/debug.vs", "src/shader/debug.fs");
     int m_planeSize;
     VertexArray m_plane;
     RenderData(m_plane, m_planeSize, (int)RENDERTYPE::QUAD);
     uint32_t woodPng = GetTexture("src/resource/wood.png");
-    m_FloorShader.SetValue("uTexture", 0);
+   
 
     float lastTime = static_cast<float>(glfwGetTime());
 
@@ -163,12 +163,28 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        m_DebugShader.use();
-        m_plane.Bind();
-        m_DebugShader.SetValue("uTexture", 0);
+        //uniform
+        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+        glm::mat4 Matrix[2]{
+            camera.GetViewMatrix(),
+            camera.GetPerspectMatrix((float) SCREENWIDTH / (float) SCREENWIDTH)
+        };
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4) * 2, glm::value_ptr(Matrix[0]));
+
+        m_SceneShader.use();
+        m_SceneShader.SetValue("LightOrtho", LightOrtho * LightView);
+        m_SceneShader.SetValue("uCameraPos", camera.GetPosition());
+        m_SceneShader.SetValue("uLightPos", lightPos);
+
+        m_SceneShader.SetValue("uTexture", 0);
         glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, woodPng);
+
+        m_SceneShader.SetValue("depthMap", 1);
+        glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, depthTex);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+        RenderScene(m_SceneShader);
         /*glViewport(0, 0, SCREENWIDTH, SCREENHEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glEnable(GL_DEPTH_TEST);

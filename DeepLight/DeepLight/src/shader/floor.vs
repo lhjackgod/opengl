@@ -7,17 +7,22 @@ layout(std140, binding = 2) uniform PMatrix
     mat4 view;
     mat4 perspective;
 };
-
+out VS_OUT
+{
+    vec2 vTexCoord;
+    vec3 vNormal;
+    vec3 vFragPos;
+    vec4 FragPosLightSpace;
+} fs_out;
 uniform mat4 model;
+uniform mat4 LightOrtho;
 
-out vec2 vTexCoord;
-out vec3 vNormal;
-out vec3 vFragPos;
 void main()
 {
-    vTexCoord = aTexCoord;
-    vNormal = aNormal;
+    fs_out.vTexCoord = aTexCoord;
+    fs_out.vNormal = aNormal;
     vec4 vPos = model * vec4(aPos, 1.0);
-    vFragPos = vec3(vPos / vPos.w);
+    fs_out.vFragPos = vec3(vPos / vPos.w);
+    fs_out.FragPosLightSpace = LightOrtho * model * vec4(aPos, 1.0);
     gl_Position = perspective * view * model * vec4(aPos, 1.0);
 }
