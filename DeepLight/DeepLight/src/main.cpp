@@ -152,6 +152,8 @@ int main()
         glBindFramebuffer(GL_FRAMEBUFFER, depthFbo);
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
         glClear(GL_DEPTH_BUFFER_BIT);
         m_RenderDepth.use();
         m_RenderDepth.SetValue("lightSpaceMatrix", LightOrtho * LightView);
@@ -160,9 +162,9 @@ int main()
         
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, SCREENWIDTH, SCREENHEIGHT);
+        glDisable(GL_CULL_FACE);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         //uniform
         glBindBuffer(GL_UNIFORM_BUFFER, ubo);
         glm::mat4 Matrix[2]{
