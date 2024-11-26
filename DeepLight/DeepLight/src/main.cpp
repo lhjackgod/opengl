@@ -150,14 +150,15 @@ int main()
         lastTime = nowTime;
 
         glm::mat4 LightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-        glm::mat4 LightOrtho = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 7.5f);
+        //glm::mat4 LightOrtho = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 7.5f);
+        glm::mat4 lightPer = glm::perspective(glm::radians(45.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, 1.0f, 100.0f);
         glBindFramebuffer(GL_FRAMEBUFFER, depthFbo);
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glEnable(GL_DEPTH_TEST);
         
         glClear(GL_DEPTH_BUFFER_BIT);
         m_RenderDepth.use();
-        m_RenderDepth.SetValue("lightSpaceMatrix", LightOrtho * LightView);
+        m_RenderDepth.SetValue("lightSpaceMatrix", lightPer * LightView);
 
         RenderScene(m_RenderDepth);
         
@@ -175,7 +176,7 @@ int main()
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4) * 2, glm::value_ptr(Matrix[0]));
 
         m_SceneShader.use();
-        m_SceneShader.SetValue("LightOrtho", LightOrtho * LightView);
+        m_SceneShader.SetValue("LightOrtho", lightPer * LightView);
         m_SceneShader.SetValue("uCameraPos", camera.GetPosition());
         m_SceneShader.SetValue("uLightPos", lightPos);
 
