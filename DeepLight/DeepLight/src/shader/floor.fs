@@ -23,25 +23,29 @@ float is_visable(float bias)
     
     vec3 dir = normalize(fragPos_to_light);
     float currentDepth = length(fragPos_to_light);
+    float viewDistance = length(uCameraPos - fs_in.vFragPos);
     //pcf
     float visibility = 0.0;
-    float samples = 4.0;
+    float samples = 20.0;
     float offset = 0.1;
 
-    for(float x = -offset; x < offset; x += offset / (samples * 0.5))
+    float diskRadius = (1.0 + (viewDistance / far_plane)) / 25.0; 
+    vec3 sampleOffsetDirections[20] = vec3[]
+    (
+        vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
+        vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
+        vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
+        vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
+        vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
+    ); 
+
+    for(int i = 0;i < 20; i++)
     {
-        for(float y = -offset; y < offset; y += offset / (samples * 0.5))
-        {
-            for(float z = -offset; z < offset; z += offset / (samples * 0.5))
-            {
-                vec3 pasDir = normalize(dir + vec3(x, y, z));
-                float closeDepth = texture(depthMap, pasDir).r * far_plane;
-                visibility += (currentDepth > closeDepth + bias ? 0.0 : 1.0);
-            }
-        }
+        float closeDepth = texture(depthMap, sampleOffsetDirections[i] * diskRadius + dir).r * far_plane;
+        visibility += (currentDepth > closeDepth + 0.15 ? 0.0 : 1.0);
     }
     
-    return visibility / (samples * samples * samples);
+    return visibility / samples;
 }
 void main()
 {
@@ -70,6 +74,5 @@ void main()
 
     //shadow
     //resultColor *= is_visable(fs_in.FragPosLightSpace);
-    
     FragColor = vec4(vec3(resultColor), 1.0);
 }

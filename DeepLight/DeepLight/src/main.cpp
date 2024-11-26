@@ -147,7 +147,6 @@ int main()
 
     glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
   
-    
 
     while (!glfwWindowShouldClose(window))
     {
