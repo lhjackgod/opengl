@@ -22,11 +22,26 @@ float is_visable(float bias)
     vec3 fragPos_to_light = fs_in.vFragPos - uLightPos;
     
     vec3 dir = normalize(fragPos_to_light);
-
-    float closeDepth = texture(depthMap, dir).r * far_plane;
     float currentDepth = length(fragPos_to_light);
+    //pcf
+    float visibility = 0.0;
+    float samples = 4.0;
+    float offset = 0.1;
+
+    for(float x = -offset; x < offset; x += offset / (samples * 0.5))
+    {
+        for(float y = -offset; y < offset; y += offset / (samples * 0.5))
+        {
+            for(float z = -offset; z < offset; z += offset / (samples * 0.5))
+            {
+                vec3 pasDir = normalize(dir + vec3(x, y, z));
+                float closeDepth = texture(depthMap, pasDir).r * far_plane;
+                visibility += (currentDepth > closeDepth + bias ? 0.0 : 1.0);
+            }
+        }
+    }
     
-    return currentDepth > closeDepth + bias ? 0.0 : 1.0;
+    return visibility / (samples * samples * samples);
 }
 void main()
 {
