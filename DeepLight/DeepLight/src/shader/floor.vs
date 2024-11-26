@@ -12,17 +12,22 @@ out VS_OUT
     vec2 vTexCoord;
     vec3 vNormal;
     vec3 vFragPos;
-    vec4 FragPosLightSpace;
 } fs_out;
 uniform mat4 model;
-uniform mat4 LightOrtho;
-
+uniform int reverse_normals;
 void main()
 {
     fs_out.vTexCoord = aTexCoord;
-    fs_out.vNormal = aNormal;
+    if(reverse_normals == 1)
+    {
+        fs_out.vNormal = transpose(inverse(mat3(model))) * (-1.0 * aNormal); 
+    }
+    else
+    {
+        fs_out.vNormal = transpose(inverse(mat3(model))) * aNormal;
+    }
+
     vec4 vPos = model * vec4(aPos, 1.0);
     fs_out.vFragPos = vec3(vPos / vPos.w);
-    fs_out.FragPosLightSpace = LightOrtho * model * vec4(aPos, 1.0);
     gl_Position = perspective * view * model * vec4(aPos, 1.0);
 }

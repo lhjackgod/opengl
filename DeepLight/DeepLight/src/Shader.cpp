@@ -68,6 +68,94 @@ Shader::Shader(const std::string& vf, const std::string& fv)
     glDeleteShader(v_shader);
     glDeleteShader(f_shader);
 }
+Shader::Shader(const std::string& vf, const std::string& gv, const std::string& fv)
+{
+    std::ifstream vfile, ffile, gfile;
+    vfile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+    ffile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+    gfile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+
+    vfile.open(vf);
+    ffile.open(fv);
+    gfile.open(gv);
+
+    std::stringstream vss, fss, gss;
+    std::string v_str, f_str, g_str;
+    vss << vfile.rdbuf();
+    fss << ffile.rdbuf();
+    gss << gfile.rdbuf();
+
+    v_str = vss.str(), f_str = fss.str(), g_str = gss.str();
+    const GLchar* v_C;
+    const GLchar* f_C;
+    const GLchar* g_C;
+    v_C = v_str.c_str(), f_C = f_str.c_str(), g_C = g_str.c_str();
+    uint32_t v_Shader, f_Shader, g_Shader;
+    {
+        v_Shader = glCreateShader(GL_VERTEX_SHADER);
+        f_Shader = glCreateShader(GL_FRAGMENT_SHADER);
+        g_Shader = glCreateShader(GL_GEOMETRY_SHADER);
+        glShaderSource(v_Shader, 1, &v_C, nullptr);
+        glShaderSource(f_Shader, 1, &f_C, nullptr);
+        glShaderSource(g_Shader, 1, &g_C, nullptr);
+    }
+    {
+        glCompileShader(v_Shader);
+        glCompileShader(f_Shader);
+        glCompileShader(g_Shader);
+    }
+    {
+        int successShader;
+        glGetShaderiv(v_Shader, GL_COMPILE_STATUS, &successShader);
+        if (!successShader)
+        {
+
+            int maxSize;
+            glGetShaderiv(v_Shader, GL_INFO_LOG_LENGTH, &maxSize);
+            std::vector<GLchar> info(maxSize);
+            glGetShaderInfoLog(v_Shader, maxSize, &maxSize, &info[0]);
+            std::cout << vf << "has compile error" << "\t" << info.data() << std::endl;
+        }
+
+        glGetShaderiv(f_Shader, GL_COMPILE_STATUS, &successShader);
+        if (!successShader)
+        {
+            int maxSize;
+            glGetShaderiv(f_Shader, GL_INFO_LOG_LENGTH, &maxSize);
+            std::vector<GLchar> info(maxSize);
+            glGetShaderInfoLog(f_Shader, maxSize, &maxSize, &info[0]);
+            std::cout << fv << "has compile error" << "\t" << info.data() << std::endl;
+        }
+
+        glGetShaderiv(g_Shader, GL_COMPILE_STATUS, &successShader);
+        if (!successShader)
+        {
+            int maxSize;
+            glGetShaderiv(g_Shader, GL_INFO_LOG_LENGTH, &maxSize);
+            std::vector<GLchar> info(maxSize);
+            glGetShaderInfoLog(g_Shader, maxSize, &maxSize, &info[0]);
+            std::cout << gv << "has compile error" << "\t" << info.data() << std::endl;
+        }
+    }
+    uint32_t program;
+    program = glCreateProgram();
+    glAttachShader(program, v_Shader);
+    glAttachShader(program, f_Shader);
+    glAttachShader(program, g_Shader);
+
+    glLinkProgram(program);
+
+
+    m_RendererID = program;
+
+    glDetachShader(program, v_Shader);
+    glDetachShader(program, f_Shader);
+    glDetachShader(program, g_Shader);
+
+    glDeleteShader(f_Shader);
+    glDeleteShader(v_Shader);
+    glDeleteShader(g_Shader);
+}
 void Shader::use()
 {
     glUseProgram(m_RendererID);

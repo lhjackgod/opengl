@@ -4,6 +4,7 @@ class Shader
 {
 public:
 	Shader(const std::string& vf, const std::string& fv);
+	Shader(const std::string& vf, const std::string& gv, const std::string& fv);
 	void use();
 	template<typename T>
 	void SetValue(const std::string& name, const T& value);

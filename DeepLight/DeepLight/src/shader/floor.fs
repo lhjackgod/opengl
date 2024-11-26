@@ -7,42 +7,26 @@ in VS_OUT
     vec2 vTexCoord;
     vec3 vNormal;
     vec3 vFragPos;
-    vec4 FragPosLightSpace;
 } fs_in;
 
 uniform sampler2D uTexture;
-uniform sampler2D depthMap;
+uniform samplerCube depthMap;
 
 uniform vec3 uCameraPos;
 uniform vec3 uLightPos;
 
-float is_visable(vec4 fragPosLightSpace, float bias)
+uniform float far_plane;
+
+float is_visable(float bias)
 {
-    vec3 frag_pos_light_space = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    frag_pos_light_space = frag_pos_light_space * 0.5 + 0.5;
-    float closeDepth = texture(depthMap, frag_pos_light_space.xy).r;
-    float currentDepth = frag_pos_light_space.z;
-    //get per pixel step
-    vec2 pixelStep = 1.0 / textureSize(depthMap, 0);
-
-    float sampleNums = 9.0;
-    float visibility = 0.0;
-
+    vec3 fragPos_to_light = fs_in.vFragPos - uLightPos;
     
-    for(int i = -1; i <= 1; i++)
-    {
-        for(int j = -1; j <= 1; j++)
-        {
-            float pcfDepth = texture(depthMap, frag_pos_light_space.xy + vec2(i, j) * pixelStep).r;
-            visibility += (currentDepth > pcfDepth + bias ? 0.0 : 1.0);
-        }
-    }
-    if(frag_pos_light_space.z > 1.0)
-    {
-        return 1.0;
-    }
+    vec3 dir = normalize(fragPos_to_light);
+
+    float closeDepth = texture(depthMap, dir).r * far_plane;
+    float currentDepth = length(fragPos_to_light);
     
-    return visibility / sampleNums;
+    return currentDepth > closeDepth + bias ? 0.0 : 1.0;
 }
 void main()
 {
@@ -65,12 +49,12 @@ void main()
     //calculate bias
     float bias = max(0.05 * (1.0 - dot(lightDir, normal)), 0.005);
 
-    vec3 resultColor = clamp((duffse_light_contribute + specular_light_contribute) * is_visable(fs_in.FragPosLightSpace, bias) +
+    vec3 resultColor = clamp((duffse_light_contribute + specular_light_contribute) * is_visable(bias) +
     ambient_light_contribute
     , 0.0, 1.0);
 
     //shadow
     //resultColor *= is_visable(fs_in.FragPosLightSpace);
-
-    FragColor = vec4(resultColor, 1.0);
+    
+    FragColor = vec4(vec3(resultColor), 1.0);
 }
