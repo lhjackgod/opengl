@@ -111,9 +111,9 @@ int main()
     Shader m_quadShader("src/shader/quad.vs", "src/shader/quad.fs");
 
     
-    uint32_t blockTex = GetTexture("src/resource/bricks2.jpg");
-    uint32_t blockNormalTex = GetTexture("src/resource/bricks2_normal.jpg");
-    uint32_t blockHeightTex = GetTexture("src/resource/bricks2_disp.jpg");
+    uint32_t blockTex = GetTexture("src/resource/wood.png");
+    uint32_t blockNormalTex = GetTexture("src/resource/toy_box_normal.png");
+    uint32_t blockHeightTex = GetTexture("src/resource/toy_box_disp.png");
 
     m_quadShader.use();
     m_quadShader.SetValue("u_DiffuseTexture", 0);

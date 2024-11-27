@@ -45,7 +45,6 @@ void main()
     vec4 pas_pos = model * vec4(aPos, 1.0);
     vs_out.vFragPos = (pas_pos / pas_pos.w).xyz;
     vs_out.tangentFragPos = inv_TBN * vs_out.vFragPos;
-    
     vs_out.vTexCoord = aTexCoord;
     gl_Position = perspective * view * model * vec4(aPos, 1.0);
 }

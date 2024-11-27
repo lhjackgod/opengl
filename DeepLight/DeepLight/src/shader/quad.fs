@@ -33,8 +33,14 @@ vec2 calculateTexCoord(vec2 texCoord, vec3 viewDir)
         texCoord -= deltaTexCoord;
         currentDepthMapValue = texture(u_HeightTex, texCoord).r;
     }
+    vec2 beforeTexCoord = texCoord + deltaTexCoord;
 
-    
+    float afterDepth = currentDepthMapValue - currentLayerDepth;
+    float beforeDepth = texture(u_HeightTex, beforeTexCoord).r - currentLayerDepth + layerDepth;
+
+    float weight = afterDepth / (afterDepth - beforeDepth);
+    texCoord = weight * beforeTexCoord + (1.0 - weight) * texCoord;
+
     return texCoord;
 }
 void main()
