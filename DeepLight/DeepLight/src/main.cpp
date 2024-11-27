@@ -28,8 +28,8 @@ static void bindTexture(uint32_t id, size_t slot)
 }
 uint32_t GetTexture(const std::string& tex);
 struct UserData {
-    int useBinPhong = 1;
-    bool usequad = false;
+    float heightscale = 0.1f;
+    bool useHight = false;
 }userData;
 enum class RENDERTYPE
 {
@@ -88,14 +88,21 @@ int main()
         {
             if (action == GLFW_PRESS)
             {
-                u_Data->useBinPhong ^= 1;
+                u_Data->heightscale += 0.01f;
+            }
+        }
+        else if (key == GLFW_KEY_L)
+        {
+            if (action == GLFW_PRESS)
+            {
+                u_Data->heightscale -= 0.01f;
             }
         }
         if (key == GLFW_KEY_P)
         {
             if (action == GLFW_PRESS)
             {
-                u_Data->usequad ^= 1;
+                u_Data->useHight ^= 1;
             }
         }
     });
@@ -104,12 +111,14 @@ int main()
     Shader m_quadShader("src/shader/quad.vs", "src/shader/quad.fs");
 
     
-    uint32_t blockTex = GetTexture("src/resource/brickwall.jpg");
-    uint32_t blockNormalTex = GetTexture("src/resource/brickwall_normal.jpg");
-   
+    uint32_t blockTex = GetTexture("src/resource/bricks2.jpg");
+    uint32_t blockNormalTex = GetTexture("src/resource/bricks2_normal.jpg");
+    uint32_t blockHeightTex = GetTexture("src/resource/bricks2_disp.jpg");
+
     m_quadShader.use();
     m_quadShader.SetValue("u_DiffuseTexture", 0);
     m_quadShader.SetValue("u_NormalTex", 1);
+    m_quadShader.SetValue("u_HeightTex", 2);
 
     float lastTime = static_cast<float>(glfwGetTime());
 
@@ -123,6 +132,7 @@ int main()
     
 
     glm::vec3 lightPos(0.5f, 1.0f, 0.3f);
+
   
 
     while (!glfwWindowShouldClose(window))
@@ -145,11 +155,14 @@ int main()
         m_quadShader.SetValue("uLightPos", lightPos);
         m_quadShader.SetValue("uCameraPos", camera.GetPosition());
         m_quadShader.SetValue("model", glm::mat4(1.0));
+        m_quadShader.SetValue("heightScale", userData.heightscale);
+        m_quadShader.SetValue("useHight", userData.useHight ? 1 : 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, blockTex);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, blockNormalTex);
-        
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, blockHeightTex);
         RenderQuad();
         
         glfwSwapBuffers(window);
@@ -212,7 +225,8 @@ uint32_t GetTexture(const std::string& tex)
         break;
     }
     glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
