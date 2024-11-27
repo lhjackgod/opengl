@@ -22,9 +22,20 @@ uniform int useHight;
 
 vec2 calculateTexCoord(vec2 texCoord, vec3 viewDir)
 {
-    viewDir = inverse(fs_in.TBN) * viewDir;
-    float height = texture(u_HeightTex, texCoord).r;
-    return texCoord - viewDir.xy / viewDir.z * (height * heightScale);
+    const float numLayer = 10.0;
+    float layerDepth = 1.0 / numLayer;
+    float currentLayerDepth = 0.0;
+    vec2 deltaTexCoord = viewDir.xy * heightScale / numLayer;
+    float currentDepthMapValue = texture(u_HeightTex, texCoord).r;
+    while(currentLayerDepth < currentDepthMapValue)
+    {
+        currentLayerDepth += layerDepth;
+        texCoord -= deltaTexCoord;
+        currentDepthMapValue = texture(u_HeightTex, texCoord).r;
+    }
+
+    
+    return texCoord;
 }
 void main()
 {
