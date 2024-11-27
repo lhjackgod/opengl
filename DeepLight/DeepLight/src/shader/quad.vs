@@ -26,9 +26,10 @@ uniform vec3 uCameraPos;
 void main()
 {
     vec3 T = normalize(transpose(inverse(mat3(model))) * tangent);
-    vec3 B = normalize(transpose(inverse(mat3(model))) * bitangent);
     vec3 N = normalize(transpose(inverse(mat3(model))) * aNormal);
+    T = normalize(T - dot(T,N) * N);
 
+    vec3 B = cross(N, T);
     vs_out.TBN = mat3(T, B, N);
     vs_out.TBN = inverse(vs_out.TBN);
 
