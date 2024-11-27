@@ -19,6 +19,7 @@ void ProcessInput(GLFWwindow* window, float deltaTime);
 void MouseMove(GLFWwindow* window, double xpos, double ypos);
 void MouseScroll(GLFWwindow* window, double xoffset, double yoffset);
 void RenderData(VertexArray& outver ,int& size, int type);
+void RenderQuad();
 static void RenderScene(Shader& shaderProgram);
 static void bindTexture(uint32_t id, size_t slot)
 {
@@ -100,14 +101,15 @@ int main()
     });
     
 
-    Shader m_DebugShader("src/shader/debug.vs", "src/shader/debug.fs");
+    Shader m_quadShader("src/shader/quad.vs", "src/shader/quad.fs");
+
     
     uint32_t blockTex = GetTexture("src/resource/brickwall.jpg");
     uint32_t blockNormalTex = GetTexture("src/resource/brickwall_normal.jpg");
    
-    m_DebugShader.use();
-    m_DebugShader.SetValue("u_DiffuseTex", 0);
-    m_DebugShader.SetValue("u_NormalTex", 1);
+    m_quadShader.use();
+    m_quadShader.SetValue("u_DiffuseTexture", 0);
+    m_quadShader.SetValue("u_NormalTex", 1);
 
     float lastTime = static_cast<float>(glfwGetTime());
 
@@ -120,7 +122,7 @@ int main()
     glBindBufferRange(GL_UNIFORM_BUFFER, 2, ubo, 0, sizeof(glm::mat4) * 2);
     
 
-    glm::vec3 lightPos(0.0f, 0.0f, 3.0f);
+    glm::vec3 lightPos(0.5f, 1.0f, 0.3f);
   
 
     while (!glfwWindowShouldClose(window))
@@ -139,15 +141,16 @@ int main()
         glBindBuffer(GL_UNIFORM_BUFFER, ubo);
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4) * 2, glm::value_ptr(Matrix[0]));
 
-        m_DebugShader.use();
-        m_DebugShader.SetValue("uLightPos", lightPos);
-
+        m_quadShader.use();
+        m_quadShader.SetValue("uLightPos", lightPos);
+        m_quadShader.SetValue("uCameraPos", camera.GetPosition());
+        m_quadShader.SetValue("model", glm::mat4(1.0));
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, blockTex);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, blockNormalTex);
         
-        RenderScene(m_DebugShader);
+        RenderQuad();
         
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -201,11 +204,11 @@ uint32_t GetTexture(const std::string& tex)
         break;
     case 3:
         dataFormat = GL_RGB;
-        internalFormat = GL_SRGB;
+        internalFormat = GL_RGB;
         break;
     case 4:
         dataFormat = GL_RGBA;
-        internalFormat = GL_SRGB_ALPHA;
+        internalFormat = GL_RGBA;
         break;
     }
     glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
@@ -275,11 +278,14 @@ void RenderData(VertexArray& outver, int& size, int type)
     case RENDERTYPE::QUAD:
     {
         float vertices[]{
-            -1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-            1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
-            1.0f, -1.0f, 0.0f, 1.0f, 0.0f, };
-        size = 4;
+            -1.0f, -1.0f, -1.0f, 0.0f, 1.0f,
+            -1.0f, -1.0f, 1.0f, 0.0f, 0.0f,
+            1.0f, -1.0f, 1.0f, 1.0f, 1.0f,
+
+            1.0f, -1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, -1.0f, -1.0f, 1.0f, 0.0f,
+            -1.0f, -1.0f, -1.0f, 0.0f, 1.0f };
+        size = 6;
         outver.SetData(vertices, sizeof(vertices), 1);
         break;
     }
@@ -302,6 +308,78 @@ void RenderData(VertexArray& outver, int& size, int type)
         
     }
 }
+unsigned int quadVAO = 0;
+void RenderQuad()
+{
+    if (!quadVAO)
+    {
+        glm::vec3 pos1(-1.0f, 1.0f, 0.0f);
+        glm::vec3 pos2(-1.0f, -1.0f, 0.0f);
+        glm::vec3 pos3(1.0f, -1.0f, 0.0f);
+        glm::vec3 pos4(1.0f, 1.0f, 0.0f);
+        // texture coordinates
+        glm::vec2 uv1(0.0f, 1.0f);
+        glm::vec2 uv2(0.0f, 0.0f);
+        glm::vec2 uv3(1.0f, 0.0f);
+        glm::vec2 uv4(1.0f, 1.0f);
+
+        //current face only has this local normal
+        glm::vec3 nm(0.0f, 0.0f, 1.0f);
+
+        glm::vec3 tangent1, bitangent1;
+        glm::vec3 tangent2, bitangent2;
+
+        glm::vec3 edge1 = pos2 - pos1;
+        glm::vec3 edge2 = pos3 - pos1;
+
+        glm::vec2 deltaUV1 = uv2 - uv1;
+        glm::vec2 deltaUV2 = uv3 - uv1;
+
+        float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+        tangent1 = (deltaUV2.y * edge1 - deltaUV1.y * edge2) * f;
+        bitangent1 = (-1.0f * deltaUV2.x * edge1 + deltaUV1.x * edge2) * f;
+
+        //tangent2
+        edge1 = pos3 - pos1;
+        edge1 = pos4 - pos1;
+
+        deltaUV1 = uv3 - uv1;
+        deltaUV2 = uv4 - uv1;
+
+        f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+        tangent2 = (deltaUV2.y * edge1 - deltaUV1.y * edge2) * f;
+        bitangent2 = (-1.0f * deltaUV2.x * edge1 + deltaUV1.x * edge2) * f;
+
+        float quadVertices[] = {
+            pos1.x, pos1.y, pos1.z, nm.x, nm.y, nm.z, uv1.x, uv1.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+            pos2.x, pos2.y, pos2.z, nm.x, nm.y, nm.z, uv2.x, uv2.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+            pos3.x, pos3.y, pos3.z, nm.x, nm.y, nm.z, uv3.x, uv3.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+
+            pos1.x, pos1.y, pos1.z, nm.x, nm.y, nm.z, uv1.x, uv1.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z,
+            pos3.x, pos3.y, pos3.z, nm.x, nm.y, nm.z, uv3.x, uv3.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z,
+            pos4.x, pos4.y, pos4.z, nm.x, nm.y, nm.z, uv4.x, uv4.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z,
+        };
+        glGenVertexArrays(1, &quadVAO);
+        uint32_t quadvbo;
+        glBindVertexArray(quadVAO);
+        glGenBuffers(1, &quadvbo);
+        glBindBuffer(GL_ARRAY_BUFFER, quadvbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices[0], GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(2);
+        glEnableVertexAttribArray(3);
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 14, (void*)(0));
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 14, (void*)(sizeof(float) * 3));
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 14, (void*)(sizeof(float) * 6));
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 14, (void*)(sizeof(float) * 8));
+        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 14, (void*)(sizeof(float) * 11));
+    }
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+}
 
 void RenderScene(Shader& shaderProgram)
 {
@@ -312,7 +390,7 @@ void RenderScene(Shader& shaderProgram)
     int count;
     RenderData(floorVertex, count, (int)RENDERTYPE::QUAD);
     floorVertex.Bind();
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, count);
+    glDrawArrays(GL_TRIANGLES, 0, count);
     return;
 
     //cube
