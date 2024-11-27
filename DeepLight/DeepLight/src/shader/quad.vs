@@ -15,17 +15,29 @@ out VS_OUT
     vec3 vFragPos;
     vec2 vTexCoord;
     mat3 TBN;
+    vec3 tangentLightPos;
+    vec3 tangentCameraPos;
 } vs_out;
 uniform mat4 model;
+
+uniform vec3 uLightPos;
+uniform vec3 uCameraPos;
+
 void main()
 {
-    vec3 T = normalize(mat3(model) * tangent);
-    vec3 B = normalize(mat3(model) * bitangent);
+    vec3 T = normalize(transpose(inverse(mat3(model))) * tangent);
+    vec3 B = normalize(transpose(inverse(mat3(model))) * bitangent);
     vec3 N = normalize(transpose(inverse(mat3(model))) * aNormal);
 
     vs_out.TBN = mat3(T, B, N);
+    vs_out.TBN = inverse(vs_out.TBN);
+
+    vs_out.tangentLightPos = vs_out.TBN * uLightPos;
+    vs_out.tangentCameraPos = vs_out.TBN * uCameraPos;
+
     vec4 pas_pos = model * vec4(aPos, 1.0);
-    vs_out.vFragPos = (pas_pos / pas_pos.w).xyz;
+    vs_out.vFragPos = vs_out.TBN * (pas_pos / pas_pos.w).xyz;
+
     vs_out.vTexCoord = aTexCoord;
     gl_Position = perspective * view * model * vec4(aPos, 1.0);
 }

@@ -6,13 +6,12 @@ in VS_OUT
     vec3 vFragPos;
     vec2 vTexCoord;
     mat3 TBN;
+    vec3 tangentLightPos;
+    vec3 tangentCameraPos;
 } fs_in;
 
 uniform sampler2D u_DiffuseTexture;
 uniform sampler2D u_NormalTex;
-
-uniform vec3 uLightPos;
-uniform vec3 uCameraPos;
 
 void main()
 {
@@ -21,13 +20,12 @@ void main()
     //normal from tangent to world space
     vec3 normal = texture(u_NormalTex, fs_in.vTexCoord).rgb;
     normal = normalize(normal * 2.0 - 1.0);
-    normal = normalize(fs_in.TBN * normal);
 
     //lightDir
-    vec3 lightDir = normalize(uLightPos - fs_in.vFragPos);
+    vec3 lightDir = normalize(fs_in.tangentLightPos - fs_in.vFragPos);
 
     //cameraDir
-    vec3 cameraDir = normalize(uCameraPos - fs_in.vFragPos);
+    vec3 cameraDir = normalize(fs_in.tangentCameraPos - fs_in.vFragPos);
 
     //halfwayDir
     vec3 halfwayDir = normalize(lightDir + cameraDir);
