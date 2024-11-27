@@ -100,12 +100,14 @@ int main()
     });
     
 
-    Shader m_SceneShader("src/shader/floor.vs", "src/shader/floor.fs");
-    Shader m_RenderDepth("src/shader/GenDepth.vs", "src/shader/GenDepth.gs", "src/shader/GenDepth.fs");
+    Shader m_DebugShader("src/shader/debug.vs", "src/shader/debug.fs");
     
-    
-    uint32_t woodPng = GetTexture("src/resource/wood.png");
+    uint32_t blockTex = GetTexture("src/resource/brickwall.jpg");
+    uint32_t blockNormalTex = GetTexture("src/resource/brickwall_normal.jpg");
    
+    m_DebugShader.use();
+    m_DebugShader.SetValue("u_DiffuseTex", 0);
+    m_DebugShader.SetValue("u_NormalTex", 1);
 
     float lastTime = static_cast<float>(glfwGetTime());
 
@@ -117,35 +119,8 @@ int main()
 
     glBindBufferRange(GL_UNIFORM_BUFFER, 2, ubo, 0, sizeof(glm::mat4) * 2);
     
-    unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
-    uint32_t fbo, depthMapTex;
-    {
-        glGenFramebuffers(1, &fbo);
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-        glGenTextures(1, &depthMapTex);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, depthMapTex);
-
-        {
-            for (int i = 0; i < 6; i++)
-            {
-                glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH,
-                    SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-            }
-            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        }
-        glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthMapTex, 0);
-        glDrawBuffer(GL_NONE);
-        glReadBuffer(GL_NONE);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
-
-    glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
+    glm::vec3 lightPos(0.0f, 0.0f, 3.0f);
   
 
     while (!glfwWindowShouldClose(window))
@@ -153,68 +128,27 @@ int main()
         float nowTime = static_cast<float>(glfwGetTime());
         ProcessInput(window, nowTime - lastTime);
         lastTime = nowTime;
-
-        glm::mat4 depth_PMatrix = glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, 1.0f, 25.0f);
-        
-        //lightLookAts
-        lightPos.z = static_cast<float>(sin(glfwGetTime() * 0.5) * 0.3);
-        glm::mat4 LightView[6] = {
-            glm::lookAt(lightPos, lightPos + glm::vec3( 1.0f,  0.0f , 0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-            glm::lookAt(lightPos, lightPos + glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-            glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
-            glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
-            glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-            glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
-        };
-
-        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         glEnable(GL_DEPTH_TEST);
-        //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_DEPTH_BUFFER_BIT);
-
-        m_RenderDepth.use();
-        for (int i = 0; i < 6; i++)
-        {
-            m_RenderDepth.SetValue("shadowMatrices[" + std::to_string(i) + "]",
-                depth_PMatrix * LightView[i]);
-        }
-        m_RenderDepth.SetValue("LightPos", lightPos);
-        m_RenderDepth.SetValue("far_plane", 25.0f);
-
-        
-        RenderScene(m_RenderDepth);
-
-        
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glViewport(0, 0, SCREENWIDTH, SCREENHEIGHT);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClearColor(0.0, 0.0, 0.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        //uniform
-        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-        
         glm::mat4 Matrix[2]{
             camera.GetViewMatrix(),
-            camera.GetPerspectMatrix((float) SCREENWIDTH / (float) SCREENWIDTH)
+            camera.GetPerspectMatrix((float)SCREENWIDTH / (float)SCREENHEIGHT)
         };
+
+        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4) * 2, glm::value_ptr(Matrix[0]));
 
-        m_SceneShader.use();
-        m_SceneShader.SetValue("uTexture", 0);
-        m_SceneShader.SetValue("depthMap", 1);
+        m_DebugShader.use();
+        m_DebugShader.SetValue("uLightPos", lightPos);
 
-        m_SceneShader.SetValue("uCameraPos", camera.GetPosition());
-        m_SceneShader.SetValue("uLightPos", lightPos);
-        m_SceneShader.SetValue("far_plane", 25.0f);
-        
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, woodPng);
-
+        glBindTexture(GL_TEXTURE_2D, blockTex);
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, depthMapTex);
-
-        RenderScene(m_SceneShader);
-       
+        glBindTexture(GL_TEXTURE_2D, blockNormalTex);
+        
+        RenderScene(m_DebugShader);
+        
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -252,6 +186,7 @@ uint32_t GetTexture(const std::string& tex)
     glGenTextures(1, &texID);
     glBindTexture(GL_TEXTURE_2D, texID);
     int width, height, channel;
+    stbi_set_flip_vertically_on_load(true);
     stbi_uc* data = stbi_load(tex.c_str(), &width, &height, &channel, 0);
     if (!data)
     {
@@ -372,11 +307,21 @@ void RenderScene(Shader& shaderProgram)
 {
     //floor
     glm::mat4 model = glm::mat4(1.0f);
+    shaderProgram.SetValue("model", model);
+    VertexArray floorVertex;
+    int count;
+    RenderData(floorVertex, count, (int)RENDERTYPE::QUAD);
+    floorVertex.Bind();
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, count);
+    return;
+
+    //cube
+    model = glm::mat4(1.0f);
     model = glm::scale(model, glm::vec3(5.0f));
     shaderProgram.SetValue("model", model);
     shaderProgram.SetValue("reverse_normals", 1);
     glDisable(GL_CULL_FACE);
-    int count;
+
     VertexArray planeVertices;
     RenderData(planeVertices, count, (int)RENDERTYPE::CUBE);
     planeVertices.Bind();
