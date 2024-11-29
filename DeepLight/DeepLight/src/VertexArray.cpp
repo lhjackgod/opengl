@@ -50,6 +50,11 @@ uint32_t VertexArray::GetVertexArray()
 
 void VertexArray::SetData(float* vertices, uint32_t size, int type)
 {
+	if(m_rendererID != GL_NONE)
+	{
+		glDeleteVertexArrays(1, &m_rendererID);
+	}
+	
 	glGenVertexArrays(1, &m_rendererID);
 	glBindVertexArray(m_rendererID);
 	uint32_t vbo;

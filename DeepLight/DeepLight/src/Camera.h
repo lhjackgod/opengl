@@ -17,6 +17,7 @@ public:
 	glm::mat4 GetViewMatrix();
 	glm::mat4 GetPerspectMatrix(const float& aspect);
 	glm::vec3 GetPosition() const { return m_Position;}
+	void setMoveSpeed();
 private:
 	glm::vec3 WorldUP{0.0f, 1.0f, 0.0f};
 	float pitch = 0.0f;

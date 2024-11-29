@@ -70,6 +70,10 @@ glm::mat4 Camera::GetPerspectMatrix(const float& aspect)
 	return glm::perspective(m_FOV, aspect, 0.1f, 100.0f);
 }
 
+void Camera::setMoveSpeed()
+{
+}
+
 void Camera::Recalculate()
 {
 	glm::vec3& front = m_Front;

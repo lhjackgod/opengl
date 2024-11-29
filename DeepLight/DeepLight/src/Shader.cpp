@@ -181,3 +181,8 @@ void Shader::SetValue<float>(const std::string& name, const float& value)
 {
     glUniform1f(glGetUniformLocation(m_RendererID, name.c_str()), value);
 }
+template<>
+void Shader::SetValue<bool>(const std::string& name, const bool& value)
+{
+    glUniform1i(glGetUniformLocation(m_RendererID, name.c_str()), value);
+}
