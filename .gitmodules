@@ -1,0 +1,3 @@
+[submodule "DeepLight/DeepLight/src/vendor/OBJ_LOADER"]
+	path = DeepLight/DeepLight/src/vendor/OBJ_LOADER
+	url = git@github.com:Bly7/OBJ-Loader.git

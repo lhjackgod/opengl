@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="shader">
+      <UniqueIdentifier>{1C21B11B-08C3-DBF1-F17D-EF45DDBE6242}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shader\bloom">
+      <UniqueIdentifier>{E47C717E-D0DF-0023-7965-39D965A7CCA5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shader\hdr">
+      <UniqueIdentifier>{A9DC6FE3-9594-B130-FE9B-8A8CEA724C21}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor">
+      <UniqueIdentifier>{B3738122-9F15-ACF8-88D0-BF4C74113349}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\OBJ_LOADER">
+      <UniqueIdentifier>{939341D3-FFA9-3F69-4821-CB8AB47610F1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\OBJ_LOADER\Source">
+      <UniqueIdentifier>{337ED3E2-1FA3-2263-48EE-07F334722181}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\OBJ_LOADER\examples">
+      <UniqueIdentifier>{A1961E08-8DA6-CAD8-F65F-2FF7E28EB971}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\OBJ_LOADER\examples\1 - LoadAndPrint">
+      <UniqueIdentifier>{2E06872A-9A6B-1AB1-2344-BC898FA80F20}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Camera.h" />
+    <ClInclude Include="src\Shader.h" />
+    <ClInclude Include="src\VertexArray.h" />
+    <ClInclude Include="src\model.h" />
+    <ClInclude Include="src\stb_image.h" />
+    <ClInclude Include="src\vendor\OBJ_LOADER\Source\OBJ_Loader.h">
+      <Filter>vendor\OBJ_LOADER\Source</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\Shader.cpp" />
+    <ClCompile Include="src\VertexArray.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\model.cpp" />
+    <ClCompile Include="src\stb_image.cpp" />
+    <ClCompile Include="src\vendor\OBJ_LOADER\examples\1 - LoadAndPrint\e1_loadandprint.cpp">
+      <Filter>vendor\OBJ_LOADER\examples\1 - LoadAndPrint</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\shader\GenDepth.fs">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="src\shader\GenDepth.vs">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="src\shader\bloom\blur.fs">
+      <Filter>shader\bloom</Filter>
+    </None>
+    <None Include="src\shader\bloom\blur.vs">
+      <Filter>shader\bloom</Filter>
+    </None>
+    <None Include="src\shader\bloom\cube.fs">
+      <Filter>shader\bloom</Filter>
+    </None>
+    <None Include="src\shader\bloom\cube.vs">
+      <Filter>shader\bloom</Filter>
+    </None>
+    <None Include="src\shader\bloom\light.fs">
+      <Filter>shader\bloom</Filter>
+    </None>
+    <None Include="src\shader\bloom\light.vs">
+      <Filter>shader\bloom</Filter>
+    </None>
+    <None Include="src\shader\bloom\screen.fs">
+      <Filter>shader\bloom</Filter>
+    </None>
+    <None Include="src\shader\bloom\screen.vs">
+      <Filter>shader\bloom</Filter>
+    </None>
+    <None Include="src\shader\debug.fs">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="src\shader\debug.vs">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="src\shader\floor.fs">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="src\shader\floor.vs">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="src\shader\hdr\Cube.fs">
+      <Filter>shader\hdr</Filter>
+    </None>
+    <None Include="src\shader\hdr\Cube.vs">
+      <Filter>shader\hdr</Filter>
+    </None>
+    <None Include="src\shader\hdr\hdr.fs">
+      <Filter>shader\hdr</Filter>
+    </None>
+    <None Include="src\shader\hdr\hdr.vs">
+      <Filter>shader\hdr</Filter>
+    </None>
+    <None Include="src\shader\hdr\light.fs">
+      <Filter>shader\hdr</Filter>
+    </None>
+    <None Include="src\shader\hdr\light.vs">
+      <Filter>shader\hdr</Filter>
+    </None>
+    <None Include="src\shader\quad.fs">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="src\shader\quad.vs">
+      <Filter>shader</Filter>
+    </None>
+  </ItemGroup>
+</Project>
