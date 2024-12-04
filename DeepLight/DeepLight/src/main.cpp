@@ -231,6 +231,12 @@ int main()
             "].Position", lightPositions[i]);
             m_RenderShader.SetValue("uLight[" + std::to_string(i) +
             "].Color", lightColors[i]);
+            m_RenderShader.SetValue("uLight[" + std::to_string(i) +
+                "].Kc", 1.0f);
+            m_RenderShader.SetValue("uLight[" + std::to_string(i) +
+                "].Klinear", 0.7f);
+            m_RenderShader.SetValue("uLight[" + std::to_string(i) +
+                "].Kquadratic", 1.8f);
         }
         m_RenderShader.SetValue("gPosition", 0);
         m_RenderShader.SetValue("gNormal", 1);
