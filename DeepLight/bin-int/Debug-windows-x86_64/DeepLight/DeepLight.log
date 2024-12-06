@@ -1,4 +1,4 @@
 ﻿  main.cpp
 D:\learnOpengl\LearnOpenGL\DeepLight\DeepLight\src\main.cpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-D:\learnOpengl\LearnOpenGL\DeepLight\DeepLight\src\main.cpp(29,39): warning C4267: “参数”: 从“size_t”转换到“GLenum”，可能丢失数据
+D:\learnOpengl\LearnOpenGL\DeepLight\DeepLight\src\main.cpp(30,39): warning C4267: “参数”: 从“size_t”转换到“GLenum”，可能丢失数据
   DeepLight.vcxproj -> D:\learnOpengl\LearnOpenGL\DeepLight\bin\Debug-windows-x86_64\DeepLight\DeepLight.exe
