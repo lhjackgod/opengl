@@ -20,7 +20,7 @@ private:
 	float m_Fov = 45.0f;
 	float m_Yaw = -90.0f;
 	float m_Pitch = 0.0f;
-	float m_MoveSpeed = 1.0f;
+	float m_MoveSpeed = 5.0f;
 	float m_DirecSpeed = 0.5f;
 	glm::vec3 m_Position;
 	glm::vec3 m_Up;

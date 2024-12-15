@@ -20,24 +20,25 @@ uniform float roughness;
 uniform vec3 workAlbedo; //in this work to calculate init F0
 uniform float metallic; // in this work to calculate init F0
 
-float MY_PI = 3.1415926;
+float MY_PI =  3.14159265359;
 vec3 calculateF(vec3 R0, float NdotH)
 {
     vec3 F = R0 + (1.0 - R0) * pow( clamp((1.0 - NdotH), 0.0, 1.0), 5.0 );
     return F;
 }
 
-float calculateGSchlick(vec3 dir, vec3 h)
+float calculateGSchlick(float NdotV)
 {
     float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
-    float Gschlick = max(dot(dir, h), 0.0) / (max(dot(dir, h), 0.0) * (1.0 - k) + k);
+    float Gschlick = NdotV / (NdotV * (1.0 - k) + k);
     return Gschlick;
 }
 
-float calculateG(vec3 viewDir, vec3 lightDir)
+float calculateG(vec3 viewDir, vec3 lightDir, vec3 normal)
 {
-    vec3 h = normalize(viewDir + lightDir);
-    float G = calculateGSchlick(viewDir, h) * calculateGSchlick(lightDir, h);
+    float NdotV = max(dot(normal, viewDir), 0.0);
+    float NdotL = max(dot(normal, lightDir), 0.0);
+    float G = calculateGSchlick(NdotV) * calculateGSchlick(NdotL);
     return G;
 }
 
@@ -56,7 +57,7 @@ vec3 calculatePBR(vec3 F0, vec3 cameraDir, vec3 lightDir, float NdotV, float Ndo
     //F
     vec3 F = calculateF(F0, NdotH);
     //G
-    float G = calculateG(cameraDir, lightDir);
+    float G = calculateG(cameraDir, lightDir, fs_in.vNormal);
     //D
     float D = calculateD(NdotH);
 
@@ -83,7 +84,8 @@ void main()
         float NdotH = max(dot(h,fs_in.vNormal), 0.0);
         float NdotL = max(dot(lightDir, fs_in.vNormal), 0.0);
         float NdotV = max(dot(cameraDir, fs_in.vNormal), 0.0);
-        float attenuation = 1.0 / length(lightMessage[i].position - fs_in.vFragPos);
+        float distance = length(lightMessage[i].position - fs_in.vFragPos);
+        float attenuation = 1.0 / (distance * distance);
         //only one light
         //fr = fms * fadd + fpbr
         vec3 fpbr = calculatePBR(F0, cameraDir, lightDir, NdotV, NdotL, NdotH);
