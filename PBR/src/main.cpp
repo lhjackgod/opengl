@@ -8,6 +8,7 @@
 #include <string>
 #include "Camera.h"
 #include "Shader.h"
+#include "stb_image.h"
 #define SCREENWIDTH 800
 #define SCREENHEIGHT 600
 
@@ -20,6 +21,7 @@ void processInputKey(GLFWwindow* window, int key, int scancode, int action, int 
 void processRote(GLFWwindow* window,double pitchOffset, double yawOffset);
 void processFOV(GLFWwindow* window, double xoffset, double yoffset);
 void renderSphere();
+uint32_t getImage(const std::string& imagePath);
 int main()
 {
 	glfwInit();
@@ -41,6 +43,7 @@ int main()
 	glfwSetScrollCallback(window, processFOV);
 
 	Shader phereShader("src/shader/pbr/Sphere.vert", "src/shader/pbr/Sphere.frag");
+	Shader cubeShader("src/shader/ibl/cube.vert", "src/shader/ibl/cube.frag");
 
 	float lastTime = static_cast<float>(glfwGetTime());
 
@@ -256,4 +259,11 @@ void renderSphere()
 	glBindVertexArray(sphereVAO);
 	glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, nullptr);
 	glBindVertexArray(0);
+}
+
+uint32_t getImage(const std::string& imagePath)
+{
+	stbi_set_flip_vertically_on_load(true);
+	int width, height;
+
 }
