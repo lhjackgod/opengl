@@ -19,6 +19,7 @@ uniform Light lightMessage[4];
 uniform float roughness;
 uniform vec3 workAlbedo; //in this work to calculate init F0
 uniform float metallic; // in this work to calculate init F0
+uniform samplerCube enviromentMap;
 
 float MY_PI =  3.14159265359;
 vec3 calculateF(vec3 R0, float NdotH)

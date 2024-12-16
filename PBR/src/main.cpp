@@ -22,6 +22,7 @@ void processRote(GLFWwindow* window,double pitchOffset, double yawOffset);
 void processFOV(GLFWwindow* window, double xoffset, double yoffset);
 void renderSphere();
 void renderCube();
+
 uint32_t getHDRImage(const std::string& imagePath);
 int main()
 {
@@ -46,6 +47,7 @@ int main()
 	Shader phereShader("src/shader/pbr/Sphere.vert", "src/shader/pbr/Sphere.frag");
 	Shader cubeShader("src/shader/ibl/cube.vert", "src/shader/ibl/cube.frag");
 	Shader skyShader("src/shader/ibl/sky.vert", "src/shader/ibl/sky.frag");
+	Shader diffuseIrradianceShader("src/shader/ibl/diffuseIrriance.vert", "src/shader/ibl/diffuseIrriance.frag");
 
 	uint32_t cubeTexture2dMap = getHDRImage("src/resource/newport_loft.hdr");
 	float lastTime = static_cast<float>(glfwGetTime());
@@ -107,12 +109,12 @@ int main()
 	//renderCube
 	glm::mat4 cubePerspective = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
 	glm::mat4 cubeView[6]{
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f))
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))
 	};
 
 	for (int i = 0; i < 6; i++)
@@ -132,6 +134,44 @@ int main()
 		renderCube();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
+
+
+	//irradiance
+	uint32_t diffuseIrrianceCubeMap;
+	{
+		glGenTextures(1, &diffuseIrrianceCubeMap);
+
+		glBindTexture(GL_TEXTURE_CUBE_MAP, diffuseIrrianceCubeMap);
+		for (int i = 0; i < 6; i++)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 512, 512, 0, GL_RGB, GL_FLOAT, nullptr);
+		}
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	}
+	//calculate diffuseIrradiance
+	glBindFramebuffer(GL_FRAMEBUFFER, envCubFbo);
+	glViewport(0, 0, 512, 512);
+	diffuseIrradianceShader.use();
+	diffuseIrradianceShader.setValue("enviromentMap", 0);
+	diffuseIrradianceShader.setValue("perspective", cubePerspective);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
+	for (int i = 0; i < 6; i++)
+	{
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, diffuseIrrianceCubeMap, 0);
+		
+		glClearColor(0, 0, 0, 1);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		diffuseIrradianceShader.setValue("view", cubeView[i]);
+		renderCube();
+		
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -187,7 +227,7 @@ int main()
 		skyShader.setValue("perspective", perspective);
 		skyShader.setValue("cubeMap", 0);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, diffuseIrrianceCubeMap);
 		renderCube();
 
 		glfwSwapBuffers(window);
@@ -337,7 +377,7 @@ void renderSphere()
 
 uint32_t getHDRImage(const std::string& imagePath)
 {
-	//stbi_set_flip_vertically_on_load(true);
+	stbi_set_flip_vertically_on_load(true);
 	int width, height, channels;
 	float* data;
 	data = stbi_loadf(imagePath.c_str(), &width, &height, &channels, 0);
