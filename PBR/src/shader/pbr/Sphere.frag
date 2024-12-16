@@ -21,6 +21,8 @@ uniform vec3 workAlbedo; //in this work to calculate init F0
 uniform float metallic; // in this work to calculate init F0
 uniform samplerCube enviromentMap;
 
+uniform int openIBL;
+
 float MY_PI =  3.14159265359;
 vec3 calculateF(vec3 R0, float NdotH)
 {
@@ -93,12 +95,17 @@ void main()
         vec3 F = calculateF(F0, NdotH);
         vec3 fd = vec3(1.0) - F;
         fd *= (1.0 - metallic);
+
         fpbr += (fd * workAlbedo / MY_PI);
         objColor += fpbr * lightMessage[i].color * NdotL * attenuation;
     }
 
-    //vec3 ambient = vec3(0.03) * workAlbedo;
-    //objColor += ambient;
+    vec3 ambient = texture(enviromentMap, normalize(fs_in.vNormal)).rgb * workAlbedo;
+    if(openIBL == 1)
+    {
+        objColor += ambient;
+    }
+    
     objColor /= (objColor + vec3(1.0));
     FragColor = vec4(pow(objColor, vec3(1.0 / 2.2)), 1.0);
 }

@@ -23,6 +23,11 @@ void processFOV(GLFWwindow* window, double xoffset, double yoffset);
 void renderSphere();
 void renderCube();
 
+struct USERDATA
+{
+	int useIBL;
+} userData;
+
 uint32_t getHDRImage(const std::string& imagePath);
 int main()
 {
@@ -43,6 +48,7 @@ int main()
 	glfwSetCursorPosCallback(window, processRote);
 	
 	glfwSetScrollCallback(window, processFOV);
+	glfwSetWindowUserPointer(window, &userData);
 
 	Shader phereShader("src/shader/pbr/Sphere.vert", "src/shader/pbr/Sphere.frag");
 	Shader cubeShader("src/shader/ibl/cube.vert", "src/shader/ibl/cube.frag");
@@ -199,7 +205,10 @@ int main()
 			phereShader.setValue("lightMessage[" + std::to_string(i) + "].position", lightPositions[i]);
 			phereShader.setValue("lightMessage[" + std::to_string(i) + "].color", lightColors[i]);
 		}
-		
+		phereShader.setValue("enviromentMap", 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, diffuseIrrianceCubeMap);
+		phereShader.setValue("openIBL", userData.useIBL);
 		for (int row = 0; row < nrRows; ++row)
 		{
 			phereShader.setValue("metallic", (float)row / (float)nrRows);
@@ -227,7 +236,7 @@ int main()
 		skyShader.setValue("perspective", perspective);
 		skyShader.setValue("cubeMap", 0);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, diffuseIrrianceCubeMap);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
 		renderCube();
 
 		glfwSwapBuffers(window);
@@ -254,6 +263,11 @@ void processInputKey(GLFWwindow* window, int key, int scancode, int action, int 
 	else if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT))
 	{
 		mainCamera.InputProcessKey(INPUTKEY::KEY_W, deltaTime);
+	}
+	if (key == GLFW_KEY_P && (action == GLFW_PRESS))
+	{
+		USERDATA* myData = (USERDATA*) glfwGetWindowUserPointer(window);
+		myData->useIBL ^= 1;
 	}
 }
 
