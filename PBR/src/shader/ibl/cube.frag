@@ -20,7 +20,7 @@ vec2 SampleSphericalMap(vec3 v)
 void main()
 {
     vec2 uv = SampleSphericalMap(normalize(FragPos));
-    vec3 color = texture(uv, cubeMap).rgb;
+    vec3 color = texture(cubeMap, uv).rgb;
 
     FragColor = vec4(color, 1.0);
 }
