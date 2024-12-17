@@ -25,9 +25,9 @@ uniform samplerCube specularEnviromentMap;
 uniform int openIBL;
 
 float MY_PI =  3.14159265359;
-vec3 calculateF(vec3 R0, float NdotH)
+vec3 calculateF(vec3 R0, float HdotV)
 {
-    vec3 F = R0 + (1.0 - R0) * pow( clamp((1.0 - NdotH), 0.0, 1.0), 5.0 );
+    vec3 F = R0 + (1.0 - R0) * pow( clamp((1.0 - HdotV), 0.0, 1.0), 5.0 );
     return F;
 }
 
@@ -55,11 +55,11 @@ float calculateD(float NdotH)
     return a * a / denominator;
 }
 
-vec3 calculatePBR(vec3 F0, vec3 cameraDir, vec3 lightDir, float NdotV, float NdotL, float NdotH)
+vec3 calculatePBR(vec3 F0, vec3 cameraDir, vec3 lightDir, float NdotV, float NdotL, float NdotH, float HdotV)
 {
     
     //F
-    vec3 F = calculateF(F0, NdotH);
+    vec3 F = calculateF(F0, HdotV);
     //G
     float G = calculateG(cameraDir, lightDir, fs_in.vNormal);
     //D
@@ -88,11 +88,12 @@ void main()
         float NdotH = max(dot(h,fs_in.vNormal), 0.0);
         float NdotL = max(dot(lightDir, fs_in.vNormal), 0.0);
         float NdotV = max(dot(cameraDir, fs_in.vNormal), 0.0);
+        float HdotV = max(dot(cameraDir, h), 0.0);
         float distance = length(lightMessage[i].position - fs_in.vFragPos);
         float attenuation = 1.0 / (distance * distance);
         //only one light
         //fr = fms * fadd + fpbr
-        vec3 fpbr = calculatePBR(F0, cameraDir, lightDir, NdotV, NdotL, NdotH);
+        vec3 fpbr = calculatePBR(F0, cameraDir, lightDir, NdotV, NdotL, NdotH, HdotV);
         vec3 F = calculateF(F0, NdotH);
         vec3 fd = vec3(1.0) - F;
         fd *= (1.0 - metallic);
@@ -100,8 +101,13 @@ void main()
         fpbr += (fd * workAlbedo / MY_PI);
         objColor += fpbr * lightMessage[i].color * NdotL * attenuation;
     }
+    vec3 F = calculateF(F0, max(dot(fs_in.vNormal, cameraDir), 0.0));
+    vec3 KD = 1.0 - F;
+    KD *= (1.0 - metallic);
 
-    vec3 ambient = texture(enviromentMap, normalize(fs_in.vNormal)).rgb * workAlbedo;
+
+
+    vec3 ambient = KD * texture(enviromentMap, normalize(fs_in.vNormal)).rgb * workAlbedo;
     vec3 R = reflect(-cameraDir, fs_in.vNormal);
     vec3 prefilterColor = textureLod(specularEnviromentMap, R, roughness * 4.0).rgb;
     vec2 specularPBR = texture(prePBR, vec2(max(dot(fs_in.vNormal, cameraDir), 0.0), roughness)).rg;
