@@ -39,6 +39,7 @@ Shader::Shader(const std::string& verPath, const std::string& fragPath)
 	glGetShaderiv(vershader, GL_COMPILE_STATUS, &versuccess);
 	if (!versuccess)
 	{
+		std::cout << verPath << std::endl;
 		int infoSize;
 		glGetShaderiv(vershader, GL_INFO_LOG_LENGTH, &infoSize);
 		std::vector<GLchar> info(infoSize);
@@ -48,6 +49,7 @@ Shader::Shader(const std::string& verPath, const std::string& fragPath)
 	glGetShaderiv(fragshader, GL_COMPILE_STATUS, &fragsuccess);
 	if (!fragsuccess)
 	{
+		std::cout << fragPath << std::endl;
 		int infoSize;
 		glGetShaderiv(fragshader, GL_INFO_LOG_LENGTH, &infoSize);
 		std::vector<GLchar>info(infoSize);

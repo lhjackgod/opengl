@@ -84,7 +84,7 @@ vec2 intergretBRDF(float NdotV, float roughness)
 		float NdotH = max(dot(N, H), 0.0);
 		
 
-		float NdotL = dot(N, L);
+		float NdotL = max(dot(N, L), 0.0);
 		if(NdotL > 0.0)
 		{
 			float G = GeometrySmith(N, L, V, roughness);

@@ -55,7 +55,8 @@ int main()
 	Shader skyShader("src/shader/ibl/sky.vert", "src/shader/ibl/sky.frag");
 	Shader diffuseIrradianceShader("src/shader/ibl/diffuseIrriance.vert", "src/shader/ibl/diffuseIrriance.frag");
 	Shader brpdShader("src/shader/ibl/prePBR.vert", "src/shader/ibl/prePBR.frag");
-	Shader screenShader("src/shader/ibl/screen.vert", "src/shader/ibl/screen.frag");
+	//Shader screenShader("src/shader/ibl/screen.vert", "src/shader/ibl/screen.frag");
+	Shader prefilterShader("src/shader/ibl/cube.vert", "src/shader/ibl/prefilter.frag");
 
 	uint32_t cubeTexture2dMap = getHDRImage("src/resource/newport_loft.hdr");
 	float lastTime = static_cast<float>(glfwGetTime());
@@ -103,6 +104,7 @@ int main()
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
+
 		for (int i = 0; i < 6; i++)
 		{
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 512, 512, 0, GL_RGB, GL_FLOAT, nullptr);
@@ -110,7 +112,7 @@ int main()
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}
 
@@ -142,7 +144,8 @@ int main()
 		renderCube();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
-
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
+	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
 	//irradiance
 	uint32_t diffuseIrrianceCubeMap;
@@ -205,6 +208,57 @@ int main()
 	renderQuad();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+
+	//calculate prefilter
+	uint32_t prefilterCubMap;
+	
+	{
+		glGenTextures(1, &prefilterCubMap);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterCubMap);
+		for (int i = 0; i < 6; i++)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 128, 128, 0, GL_RGB, GL_FLOAT, nullptr);
+		}
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	}
+	int mipmapLevel = 5;
+
+	glBindFramebuffer(GL_FRAMEBUFFER, envCubFbo);
+	prefilterShader.use();
+	prefilterShader.setValue("cubeMap", 0);
+	prefilterShader.setValue("perspective", cubePerspective);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
+	for (int mp = 0; mp < mipmapLevel; mp++)
+	{
+		unsigned int width = 128 * pow(0.5f, mp);
+		unsigned int height = 128 * pow(0.5f, mp);
+
+		glBindRenderbuffer(GL_RENDERBUFFER, cubeDepth);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+
+		float roughtness = (float)mp / ((float)mipmapLevel - 1.0);
+		prefilterShader.setValue("roughness", roughtness);
+		glViewport(0, 0, width, height);
+		for (int i = 0; i < 6; i++)
+		{
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilterCubMap, mp);
+			prefilterShader.setValue("view", cubeView[i]);
+			glClearColor(0, 0, 0, 1);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			renderCube();
+		}
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterCubMap);
+	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+
 	while (!glfwWindowShouldClose(window))
 	{
 		float currentTime = static_cast<float>(glfwGetTime());
@@ -214,62 +268,59 @@ int main()
 		glViewport(0, 0, SCREENWIDTH, SCREENHEIGHT);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glEnable(GL_DEPTH_TEST);
-		//glDepthFunc(GL_LEQUAL); //very important !!!!
+		glDepthFunc(GL_LEQUAL); //very important !!!!
 
 		glClearColor(0.0, 0.0, 0.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//glm::mat4 view = mainCamera.getViewMatrix();
-		//glm::mat4 perspective = mainCamera.getPerspective(static_cast<float>(SCREENWIDTH / SCREENHEIGHT));
-		//glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer);
-		//glm::mat4 PMatrix[2]{ view, perspective };
-		//glBufferSubData(GL_UNIFORM_BUFFER, 0, 2 * sizeof(glm::mat4), glm::value_ptr(PMatrix[0]));
-		//phereShader.use();
-		//glm::mat4 model(1.0f);
-		//phereShader.setValue("cameraPos", mainCamera.getPosition());
-		//phereShader.setValue("workAlbedo", glm::vec3(0.5f, 0.0f, 0.0f));
-		//for (int i = 0; i < 4; i++)
-		//{
-		//	phereShader.setValue("lightMessage[" + std::to_string(i) + "].position", lightPositions[i]);
-		//	phereShader.setValue("lightMessage[" + std::to_string(i) + "].color", lightColors[i]);
-		//}
-		//phereShader.setValue("enviromentMap", 0);
-		//glActiveTexture(GL_TEXTURE0);
-		//glBindTexture(GL_TEXTURE_CUBE_MAP, diffuseIrrianceCubeMap);
-		//phereShader.setValue("openIBL", userData.useIBL);
-		//for (int row = 0; row < nrRows; ++row)
-		//{
-		//	phereShader.setValue("metallic", (float)row / (float)nrRows);
-		//	for (int col = 0; col < nrColums; ++col)
-		//	{
-		//		// we clamp the roughness to 0.05 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
-		//		// on direct lighting.
-		//		phereShader.setValue("roughness", glm::clamp((float)col / (float)nrColums, 0.05f, 1.0f)); 
-
-		//		model = glm::mat4(1.0f);
-		//		model = glm::translate(model, glm::vec3(
-		//			(col - (nrColums / 2)) * spacing,
-		//			(row - (nrRows / 2)) * spacing,
-		//			0.0f
-		//		));
-		//		phereShader.setValue("model", model);
-		//		phereShader.setValue("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
-		//		renderSphere();
-		//	}
-		//}
-
-		////render sky
-		//skyShader.use();
-		//skyShader.setValue("view", view);
-		//skyShader.setValue("perspective", perspective);
-		//skyShader.setValue("cubeMap", 0);
-		//glActiveTexture(GL_TEXTURE0);
-		//glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
-		//renderCube();
-		screenShader.use();
-		screenShader.setValue("screenTex", 0);
+		glm::mat4 view = mainCamera.getViewMatrix();
+		glm::mat4 perspective = mainCamera.getPerspective(static_cast<float>(SCREENWIDTH / SCREENHEIGHT));
+		glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer);
+		glm::mat4 PMatrix[2]{ view, perspective };
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, 2 * sizeof(glm::mat4), glm::value_ptr(PMatrix[0]));
+		phereShader.use();
+		glm::mat4 model(1.0f);
+		phereShader.setValue("cameraPos", mainCamera.getPosition());
+		phereShader.setValue("workAlbedo", glm::vec3(0.5f, 0.0f, 0.0f));
+		for (int i = 0; i < 4; i++)
+		{
+			phereShader.setValue("lightMessage[" + std::to_string(i) + "].position", lightPositions[i]);
+			phereShader.setValue("lightMessage[" + std::to_string(i) + "].color", lightColors[i]);
+		}
+		phereShader.setValue("enviromentMap", 0);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, pbrTexID);
-		renderQuad();
+		glBindTexture(GL_TEXTURE_CUBE_MAP, diffuseIrrianceCubeMap);
+		phereShader.setValue("openIBL", userData.useIBL);
+		for (int row = 0; row < nrRows; ++row)
+		{
+			phereShader.setValue("metallic", (float)row / (float)nrRows);
+			for (int col = 0; col < nrColums; ++col)
+			{
+				// we clamp the roughness to 0.05 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
+				// on direct lighting.
+				phereShader.setValue("roughness", glm::clamp((float)col / (float)nrColums, 0.05f, 1.0f)); 
+
+				model = glm::mat4(1.0f);
+				model = glm::translate(model, glm::vec3(
+					(col - (nrColums / 2)) * spacing,
+					(row - (nrRows / 2)) * spacing,
+					0.0f
+				));
+				phereShader.setValue("model", model);
+				phereShader.setValue("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
+				renderSphere();
+			}
+		}
+
+		//render sky
+		skyShader.use();
+		skyShader.setValue("view", view);
+		skyShader.setValue("perspective", perspective);
+		skyShader.setValue("cubeMap", 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterCubMap);
+		glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+		renderCube();
+		glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

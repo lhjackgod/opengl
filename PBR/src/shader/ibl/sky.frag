@@ -8,7 +8,7 @@ in vec3 vFragPos;
 
 void main()
 {
-	vec3 color = texture(cubeMap, normalize(vFragPos)).rgb;
+	vec3 color = textureLod(cubeMap, normalize(vFragPos), 4).rgb;
 
 	color /= (vec3(1.0) + color);
 	color = pow(color, vec3(1.0 / 2.2));
