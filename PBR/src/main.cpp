@@ -289,6 +289,13 @@ int main()
 		phereShader.setValue("enviromentMap", 0);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, diffuseIrrianceCubeMap);
+		phereShader.setValue("specularEnviromentMap", 1);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterCubMap);
+		phereShader.setValue("prePBR", 2);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, pbrTexID);
+
 		phereShader.setValue("openIBL", userData.useIBL);
 		for (int row = 0; row < nrRows; ++row)
 		{
@@ -317,7 +324,7 @@ int main()
 		skyShader.setValue("perspective", perspective);
 		skyShader.setValue("cubeMap", 0);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterCubMap);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
 		glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 		renderCube();
 		glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);

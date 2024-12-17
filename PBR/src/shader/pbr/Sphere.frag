@@ -20,7 +20,8 @@ uniform float roughness;
 uniform vec3 workAlbedo; //in this work to calculate init F0
 uniform float metallic; // in this work to calculate init F0
 uniform samplerCube enviromentMap;
-
+uniform sampler2D prePBR;
+uniform samplerCube specularEnviromentMap;
 uniform int openIBL;
 
 float MY_PI =  3.14159265359;
@@ -101,6 +102,13 @@ void main()
     }
 
     vec3 ambient = texture(enviromentMap, normalize(fs_in.vNormal)).rgb * workAlbedo;
+    vec3 R = reflect(-cameraDir, fs_in.vNormal);
+    vec3 prefilterColor = textureLod(specularEnviromentMap, R, roughness * 4.0).rgb;
+    vec2 specularPBR = texture(prePBR, vec2(max(dot(fs_in.vNormal, cameraDir), 0.0), roughness)).rg;
+    
+    vec3 ambientSpecular = prefilterColor * (specularPBR.x * F0 + specularPBR.y);
+    ambient += ambientSpecular;
+
     if(openIBL == 1)
     {
         objColor += ambient;
