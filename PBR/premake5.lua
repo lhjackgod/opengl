@@ -8,6 +8,7 @@ IncludeDir["GLFW"] = "D:/openglEnv/GLFW/glfw/include"
 IncludeDir["GLAD"] = "D:/openglEnv/GLAD/include"
 IncludeDir["GLM"] = "D:/openglEnv/glm-1.0.1"
 IncludeDir["Assimp"] = "D:/openglEnv/assimp-5.4.3/include"
+IncludeDir["FreeType"] = "D:/openglEnv/FreeType/freetype-2.13.3/include"
 
 include "D:/openglEnv/GLAD"
 
@@ -20,24 +21,26 @@ project "PBR"
     objdir ("bin/" .. outputdir .. "/%{prj.name}")
     files 
     {
-        "%{prj.name}/src/*.cpp",
-        "%{prj.name}/src/*.h",
-        "%{prj.name}/src/*.vert",
-        "%{prj.name}/src/*.frag"
+        "src/*.cpp",
+        "src/*.h",
+        "src/*.vert",
+        "src/*.frag"
     }
     includedirs
     {
-        "%{prj.name}/src",
+        "src",
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.GLAD}",
         "%{IncludeDir.GLM}",
-        "{IncludeDir.Assimp}"
+        "%{IncludeDir.Assimp}",
+        "%{IncludeDir.FreeType}"
     }
     links
     {
         "D:/openglEnv/GLFW/glfw/build/src/Debug/glfw3.lib",
         "Glad",
-        "D:/openglEnv/assimp-5.4.3/build/lib/Debug/assimp-vc142-mtd.lib"
+        "D:/openglEnv/assimp-5.4.3/build/lib/Debug/assimp-vc142-mtd.lib",
+        "D:/openglEnv/FreeType/freetype-2.13.3/objs/x64/Debug/freetype.lib"
     }
     defines
     {

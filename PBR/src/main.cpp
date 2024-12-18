@@ -9,6 +9,10 @@
 #include "Camera.h"
 #include "Shader.h"
 #include "stb_image.h"
+#include <unordered_map>
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
 #define SCREENWIDTH 800
 #define SCREENHEIGHT 600
 
@@ -23,10 +27,21 @@ void processFOV(GLFWwindow* window, double xoffset, double yoffset);
 void renderSphere();
 void renderCube();
 void renderQuad();
+void RenderText(Shader& s, std::string tex, float x, float y, float scale, glm::vec3 color);
 struct USERDATA
 {
 	int useIBL;
 } userData;
+
+struct Character
+{
+	unsigned int TexID;
+	glm::vec2 Size;
+	glm::vec2 Bearing;
+	unsigned int Advance;
+};
+
+std::unordered_map<char, Character> characters;
 
 uint32_t getHDRImage(const std::string& imagePath);
 int main()
@@ -50,284 +65,68 @@ int main()
 	glfwSetScrollCallback(window, processFOV);
 	glfwSetWindowUserPointer(window, &userData);
 
-	Shader phereShader("src/shader/pbr/Sphere.vert", "src/shader/pbr/Sphere.frag");
-	Shader cubeShader("src/shader/ibl/cube.vert", "src/shader/ibl/cube.frag");
-	Shader skyShader("src/shader/ibl/sky.vert", "src/shader/ibl/sky.frag");
-	Shader diffuseIrradianceShader("src/shader/ibl/diffuseIrriance.vert", "src/shader/ibl/diffuseIrriance.frag");
-	Shader brpdShader("src/shader/ibl/prePBR.vert", "src/shader/ibl/prePBR.frag");
-	//Shader screenShader("src/shader/ibl/screen.vert", "src/shader/ibl/screen.frag");
-	Shader prefilterShader("src/shader/ibl/cube.vert", "src/shader/ibl/prefilter.frag");
+	//font
+	FT_Library ft;
 
-	uint32_t cubeTexture2dMap = getHDRImage("src/resource/newport_loft.hdr");
-	float lastTime = static_cast<float>(glfwGetTime());
-
-	uint32_t uniformBuffer;
-	glGenBuffers(1, &uniformBuffer);
-	glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer);
-	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), nullptr, GL_STATIC_DRAW);
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
-	glBindBufferRange(GL_UNIFORM_BUFFER, 2, uniformBuffer, 0, 2 * sizeof(glm::mat4));
-
-
-	//lights
-	glm::vec3 lightPositions[] = {
-		glm::vec3(-10.0f,  10.0f, 10.0f),
-		glm::vec3(10.0f,  10.0f, 10.0f),
-		glm::vec3(-10.0f, -10.0f, 10.0f),
-		glm::vec3(10.0f, -10.0f, 10.0f),
-	};
-	glm::vec3 lightColors[] = {
-		glm::vec3(300.0f, 300.0f, 300.0f),
-		glm::vec3(300.0f, 300.0f, 300.0f),
-		glm::vec3(300.0f, 300.0f, 300.0f),
-		glm::vec3(300.0f, 300.0f, 300.0f)
-	};
-
-	int nrRows = 7;
-	int nrColums = 7;
-	float spacing = 2.5f;
-
-	//renderEnviroment Map
-	cubeShader.use();
-	cubeShader.setValue("cubeMap", 0);
-	uint32_t envCubFbo;
-	uint32_t cubeDepth;
-	uint32_t cubeMap;
-	glGenFramebuffers(1, &envCubFbo);
-	glGenRenderbuffers(1, &cubeDepth);
-	glGenTextures(1, &cubeMap);
+	if (FT_Init_FreeType(&ft))
 	{
-		glBindRenderbuffer(GL_RENDERBUFFER, cubeDepth);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
-		glBindFramebuffer(GL_FRAMEBUFFER, envCubFbo);
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, cubeDepth);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		std::cout << "ERROR::FREETYPE: COULD NOT INIT FREETYPE LIBRAY" << std::endl;
+		return -1;
+	}
+	FT_Face face;
+	if (FT_New_Face(ft, "src/resource/arial.ttf", 0, &face))
+	{
+		std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
+		return -1;
+	}
 
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
+	FT_Set_Pixel_Sizes(face, 0, 48);
 
-		for (int i = 0; i < 6; i++)
+	
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	for (unsigned char c = 0; c < 128; c++)
+	{
+		if (FT_Load_Char(face, c, FT_LOAD_RENDER))
 		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 512, 512, 0, GL_RGB, GL_FLOAT, nullptr);
+			std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+			return -1;
 		}
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	}
-
-	//renderCube
-	glm::mat4 cubePerspective = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-	glm::mat4 cubeView[6]{
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))
-	};
-
-	for (int i = 0; i < 6; i++)
-	{
-		glViewport(0, 0, 512, 512);
-		glBindFramebuffer(GL_FRAMEBUFFER, envCubFbo);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, cubeMap, 0);
-		glEnable(GL_DEPTH_TEST);
-		glClearColor(0.0, 0.0, 0.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		cubeShader.use();
-		cubeShader.setValue("perspective", cubePerspective);
-		cubeShader.setValue("view", cubeView[i]);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, cubeTexture2dMap);
-		renderCube();
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}
-	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
-	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
-
-	//irradiance
-	uint32_t diffuseIrrianceCubeMap;
-	{
-		glGenTextures(1, &diffuseIrrianceCubeMap);
-
-		glBindTexture(GL_TEXTURE_CUBE_MAP, diffuseIrrianceCubeMap);
-		for (int i = 0; i < 6; i++)
-		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 32, 32, 0, GL_RGB, GL_FLOAT, nullptr);
-		}
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	}
-	//calculate diffuseIrradiance
-	glBindFramebuffer(GL_FRAMEBUFFER, envCubFbo);
-	glViewport(0, 0, 32, 32);
-	diffuseIrradianceShader.use();
-	diffuseIrradianceShader.setValue("enviromentMap", 0);
-	diffuseIrradianceShader.setValue("perspective", cubePerspective);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
-	for (int i = 0; i < 6; i++)
-	{
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, diffuseIrrianceCubeMap, 0);
-		
-		glClearColor(0, 0, 0, 1);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		diffuseIrradianceShader.setValue("view", cubeView[i]);
-		renderCube();
-		
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	//pre deal with pbr
-	uint32_t pbrFBO, pbrTexID;
-	{
-		glGenFramebuffers(1, &pbrFBO);
-		glGenTextures(1, &pbrTexID);
-		glBindTexture(GL_TEXTURE_2D, pbrTexID);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, 512, 512, 0, GL_RG, GL_FLOAT, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		unsigned int charTex;
+		glGenTextures(1, &charTex);
+		glBindTexture(GL_TEXTURE_2D, charTex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, pbrFBO);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pbrTexID, 0);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		Character character = {
+			charTex,
+			glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+			glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+			face->glyph->advance.x
+		};
+		characters[c] = character;
 	}
-	glBindFramebuffer(GL_FRAMEBUFFER, pbrFBO);
-	glViewport(0, 0, 512, 512);
-	glClearColor(0, 0, 0, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	brpdShader.use();
-	renderQuad();
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	FT_Done_Face(face);
+	FT_Done_FreeType(ft);
 
+	float lastTime = static_cast<float>(glfwGetTime());
 
-	//calculate prefilter
-	uint32_t prefilterCubMap;
-	
-	{
-		glGenTextures(1, &prefilterCubMap);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterCubMap);
-		for (int i = 0; i < 6; i++)
-		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 128, 128, 0, GL_RGB, GL_FLOAT, nullptr);
-		}
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	}
-	int mipmapLevel = 5;
-
-	glBindFramebuffer(GL_FRAMEBUFFER, envCubFbo);
-	prefilterShader.use();
-	prefilterShader.setValue("cubeMap", 0);
-	prefilterShader.setValue("perspective", cubePerspective);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
-	for (int mp = 0; mp < mipmapLevel; mp++)
-	{
-		unsigned int width = 128 * pow(0.5f, mp);
-		unsigned int height = 128 * pow(0.5f, mp);
-
-		glBindRenderbuffer(GL_RENDERBUFFER, cubeDepth);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
-
-		float roughtness = (float)mp / ((float)mipmapLevel - 1.0);
-		prefilterShader.setValue("roughness", roughtness);
-		glViewport(0, 0, width, height);
-		for (int i = 0; i < 6; i++)
-		{
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilterCubMap, mp);
-			prefilterShader.setValue("view", cubeView[i]);
-			glClearColor(0, 0, 0, 1);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			renderCube();
-		}
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterCubMap);
-	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+	Shader texShader("src/shader/Text/text.vert", "src/shader/Text/text.frag");
 
 	while (!glfwWindowShouldClose(window))
 	{
 		float currentTime = static_cast<float>(glfwGetTime());
 		deltaTime = currentTime - lastTime;
 		lastTime = currentTime;
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0, SCREENWIDTH, SCREENHEIGHT);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LEQUAL); //very important !!!!
-
-		glClearColor(0.0, 0.0, 0.0, 1.0);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glm::mat4 view = mainCamera.getViewMatrix();
-		glm::mat4 perspective = mainCamera.getPerspective(static_cast<float>(SCREENWIDTH / SCREENHEIGHT));
-		glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer);
-		glm::mat4 PMatrix[2]{ view, perspective };
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, 2 * sizeof(glm::mat4), glm::value_ptr(PMatrix[0]));
-		phereShader.use();
-		glm::mat4 model(1.0f);
-		phereShader.setValue("cameraPos", mainCamera.getPosition());
-		phereShader.setValue("workAlbedo", glm::vec3(0.5f, 0.0f, 0.0f));
-		for (int i = 0; i < 4; i++)
-		{
-			phereShader.setValue("lightMessage[" + std::to_string(i) + "].position", lightPositions[i]);
-			phereShader.setValue("lightMessage[" + std::to_string(i) + "].color", lightColors[i]);
-		}
-		phereShader.setValue("enviromentMap", 0);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, diffuseIrrianceCubeMap);
-		phereShader.setValue("specularEnviromentMap", 1);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterCubMap);
-		phereShader.setValue("prePBR", 2);
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, pbrTexID);
+		RenderText(texShader, "This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(1.0, 1.0, 0.0));
 
-		phereShader.setValue("openIBL", userData.useIBL);
-		for (int row = 0; row < nrRows; ++row)
-		{
-			phereShader.setValue("metallic", (float)row / (float)nrRows);
-			for (int col = 0; col < nrColums; ++col)
-			{
-				// we clamp the roughness to 0.05 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
-				// on direct lighting.
-				phereShader.setValue("roughness", glm::clamp((float)col / (float)nrColums, 0.05f, 1.0f)); 
-
-				model = glm::mat4(1.0f);
-				model = glm::translate(model, glm::vec3(
-					(col - (nrColums / 2)) * spacing,
-					(row - (nrRows / 2)) * spacing,
-					0.0f
-				));
-				phereShader.setValue("model", model);
-				phereShader.setValue("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
-				renderSphere();
-			}
-		}
-
-		//render sky
-		skyShader.use();
-		skyShader.setValue("view", view);
-		skyShader.setValue("perspective", perspective);
-		skyShader.setValue("cubeMap", 0);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
-		glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-		renderCube();
-		glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -606,4 +405,58 @@ void renderQuad()
 	glBindVertexArray(quadVAO);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glBindVertexArray(0);
+}
+
+unsigned int texVAO = 0, texVBO = 0;
+
+
+void RenderText(Shader& s, std::string tex, float x, float y, float scale, glm::vec3 color)
+{
+	if (texVAO == 0)
+	{
+		glGenVertexArrays(1, &texVAO);
+		glGenBuffers(1, &texVBO);
+		glBindBuffer(GL_ARRAY_BUFFER, texVBO);
+		glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float) * 4, nullptr, GL_STATIC_DRAW);
+		glBindVertexArray(texVAO);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*) (0));
+		glBindVertexArray(0);
+	}
+	s.use();
+	glBindVertexArray(texVAO);
+	s.setValue("uColor", color);
+	s.setValue("textImage", 0);
+	glActiveTexture(GL_TEXTURE0);
+	s.setValue("projection", glm::ortho(0.0f, 800.0f, 0.0f, 600.0f));
+
+	std::string::const_iterator oneWord = tex.begin();
+	float xpos = 0.0;
+	float ypos = 0.0;
+	for (; oneWord != tex.end(); oneWord++)
+	{
+		float w = characters[*oneWord].Size.x * scale;
+		float h = characters[*oneWord].Size.y * scale;
+
+		xpos = x + characters[*oneWord].Bearing.x * scale;
+		ypos = y - (characters[*oneWord].Size.y - characters[*oneWord].Bearing.y) * scale;
+
+		float vectices[6 * 4] = {
+			xpos, ypos, 0.0, 1.0,
+			xpos + w, ypos, 1.0, 1.0,
+			xpos, ypos + h, 0.0, 0.0,
+
+			xpos + w, ypos, 1.0, 1.0,
+			xpos + w, ypos + h, 1.0, 0.0,
+			xpos, ypos +  h, 0.0, 0.0
+		};
+		glBindBuffer(GL_ARRAY_BUFFER, texVBO);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 6 * 4, vectices);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindTexture(GL_TEXTURE_2D, characters[*oneWord].TexID);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		x += (characters[*oneWord].Advance >> 6) * scale;
+	}
+	glBindVertexArray(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
